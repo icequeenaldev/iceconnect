@@ -500,6 +500,8 @@ def signup():
         new_user = User(username=username, fullname=fullname, age=age, gender=gender, country=country, password_hash=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
+        from time import sleep
+sleep(1)
         session['user_id'] = new_user.id
         
         # Splash Screen
@@ -760,7 +762,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
+        from werkzeug.security import check_password_hash
+if user and user.password_hash and check_password_hash(user.password_hash, password):
             session['user_id'] = user.id
             user.online = True
             user.last_seen = datetime.datetime.now()
