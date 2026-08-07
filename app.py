@@ -463,7 +463,7 @@ def home():
     </html>
     ''', user=user, poll=poll, posts=posts, current_user=current_user)
 
-# --- SIGNUP (Phase 0: Professional Legal Gate & DOB) ---
+# --- SIGNUP PAGE (Full Screen, Bold, Readable) ---
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -477,18 +477,16 @@ def signup():
         password = request.form['password']
         terms_accepted = request.form.get('terms', False)
         
-        # LEGAL GATE: Terms must be accepted
         if not terms_accepted:
-            return "<h1>⛔ Access Denied</h1><p>You must accept the Terms & Conditions to join IceConnect.</p>"
+            return "<h1>⛔ Access Denied</h1><p>You must accept the Terms & Conditions.</p>"
         
-        # Calculate exact age from DOB
+        # Calculate exact age
         import datetime
         today = datetime.datetime.now()
         age = today.year - dob_year - ((today.month, today.day) < (dob_month, dob_day))
         
-        # AGE GATE: Must be 16+
         if age < 16:
-            return "<h1>⛔ Access Denied</h1><p>You must be 16 or older to join IceConnect.</p>"
+            return "<h1>⛔ Access Denied</h1><p>You must be 16 or older.</p>"
         if User.query.filter_by(username=username).first():
             return "Username taken!"
         
@@ -498,88 +496,81 @@ def signup():
         db.session.commit()
         session['user_id'] = new_user.id
         
-        # STEP 0.2: THE 5-SECOND SPLASH SCREEN
+        # Splash Screen
         return render_template_string('''
         <!DOCTYPE html>
         <html>
         <head><title>Welcome</title>
         <style>
-    body{margin:0;padding:0;background:#0b1a2e;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;overflow:hidden;}
-    .splash{animation:fadeOut 3s forwards;animation-delay:2.5s;opacity:1;}
-    @keyframes fadeOut{0%{opacity:1;}100%{opacity:0;display:none;}}
-    h1{font-size:3em;margin-bottom:10px;color:#00bfff;}
-    p{font-size:1.2em;color:#ccc;line-height:1.5;}
-    .ice-icon{font-size:80px;display:block;margin-bottom:20px;}
-</style>
-        <script>
-            setTimeout(function(){ window.location.href = "/"; }, 3000);
-        </script>
+            body{margin:0;padding:0;background:#0b1a2e;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;overflow:hidden;}
+            .splash{animation:fadeOut 3s forwards;animation-delay:2.5s;opacity:1;}
+            @keyframes fadeOut{0%{opacity:1;}100%{opacity:0;display:none;}}
+            h1{font-size:3em;margin-bottom:10px;color:#00bfff;}
+            p{font-size:1.2em;color:#ccc;line-height:1.5;}
+            .ice-icon{font-size:80px;display:block;margin-bottom:20px;}
+        </style>
+        <script>setTimeout(function(){ window.location.href = "/"; }, 3000);</script>
         </head>
         <body>
         <div class="splash">
             <span class="ice-icon">🧊</span>
             <h1>Welcome to IceConnect</h1>
-            <p>Where you meet millions of people around the world.<br>
-            Make friends, play games, and share your vibe.</p>
-            <p style="font-size:14px;color:gray;margin-top:30px;">Preparing your dashboard...</p>
+            <p>Where you meet millions of people around the world.</p>
         </div>
         </body>
         </html>
         ''')
     
-    # THE PROFESSIONAL SIGN-UP FORM
     return '''
     <!DOCTYPE html>
     <html><head><title>Sign Up</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;min-height:100vh;display:flex;justify-content:center;align-items:center;text-align:center;}
-    .login-box{background:#1a2a3e;padding:40px 30px;border-radius:20px;width:90%;max-width:400px;box-sizing:border-box;margin:auto;}
-    input{padding:14px;margin:10px 0;border-radius:10px;border:none;width:100%;box-sizing:border-box;font-size:16px;}
-    button{padding:14px;width:100%;background:#00bfff;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;margin-top:10px;}
-    a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;font-size:14px;}
-</style>
+        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;}
+        .signup-container{width:90%;max-width:400px;padding:20px;background:#1a2a3e;border-radius:20px;margin:20px auto;}
+        h1{text-align:center;font-size:28px;color:#00bfff;margin-bottom:20px;}
+        input,select{width:100%;padding:14px;margin:10px 0;border-radius:10px;border:none;background:#0b1a2e;color:white;font-size:15px;box-sizing:border-box;}
+        select{color:#ccc;appearance:none;}
+        .dob-row{display:flex;gap:8px;}
+        .dob-row select{flex:1;}
+        .terms-box{background:#0b1a2e;border:1px solid #00bfff;border-radius:10px;height:100px;overflow-y:scroll;padding:12px;text-align:left;font-size:12px;color:#ccc;margin:15px 0;}
+        .terms-box h3{color:#00bfff;margin:0;font-size:14px;}
+        label{font-size:14px;display:flex;align-items:center;gap:10px;justify-content:center;margin:10px 0;color:#ccc;}
+        button{width:100%;padding:16px;background:#00bfff;color:white;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;}
+        .login-link{color:#00bfff;text-decoration:none;display:block;text-align:center;margin-top:15px;font-size:15px;}
+    </style>
     </head>
     <body>
-    <div class="form-container">
+    <div class="signup-container">
         <h1>🧊 Join IceConnect</h1>
         <form method="POST">
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="text" name="fullname" placeholder="Full Name" required><br>
-            
-            <label style="justify-content:flex-start;font-size:12px;color:#888;margin-top:5px;">Date of Birth</label>
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="text" name="fullname" placeholder="Full Name" required>
+            <div style="font-size:13px;color:#888;text-align:left;margin:5px 0;">Date of Birth</div>
             <div class="dob-row">
-                <select name="dob_year" required>
-                    <option value="">Year</option>''' + ''.join([f'<option value="{y}">{y}</option>' for y in range(1920, 2011)]) + '''
-                </select>
-                <select name="dob_month" required>
-                    <option value="">Month</option>''' + ''.join([f'<option value="{m}">{m}</option>' for m in range(1, 13)]) + '''
-                </select>
-                <select name="dob_day" required>
-                    <option value="">Day</option>''' + ''.join([f'<option value="{d}">{d}</option>' for d in range(1, 32)]) + '''
-                </select>
+                <select name="dob_year" required><option value="">Year</option>''' + ''.join([f'<option value="{y}">{y}</option>' for y in range(1940, 2011)]) + '''</select>
+                <select name="dob_month" required><option value="">Month</option>''' + ''.join([f'<option value="{m}">{m}</option>' for m in range(1, 13)]) + '''</select>
+                <select name="dob_day" required><option value="">Day</option>''' + ''.join([f'<option value="{d}">{d}</option>' for d in range(1, 32)]) + '''</select>
             </div>
-            
-            <select name="gender"><option>Male</option><option>Female</option><option>Other</option></select><br>
-            <input type="text" name="country" placeholder="Your Country" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
+            <select name="gender"><option>Male</option><option>Female</option><option>Other</option></select>
+            <input type="text" name="country" placeholder="Your Country" required>
+            <input type="password" name="password" placeholder="Password" required>
             
             <div class="terms-box">
                 <h3>📜 Terms & Conditions</h3>
-                <p><b>1. Acceptance.</b> By creating an account, you agree to these Terms.</p>
-                <p><b>2. Eligibility.</b> You must be 16 or older. Violation results in permanent ban.</p>
-                <p><b>3. Conduct.</b> No hate speech, harassment, spam, or NSFW content.</p>
-                <p><b>4. Privacy.</b> We collect your username, age, and country. We do not sell your data.</p>
-                <p><b>5. Intellectual Property.</b> IceConnect™ branding and code are proprietary.</p>
+                <p><b>1.</b> By creating an account, you agree to these Terms.</p>
+                <p><b>2.</b> You must be 16 or older.</p>
+                <p><b>3.</b> No hate speech, harassment, or spam.</p>
+                <p><b>4.</b> We collect your username, age, and country. We do not sell your data.</p>
             </div>
             
             <label>
-                <input type="checkbox" name="terms" required style="width:auto;margin:0;"> 
-                <span style="text-align:left;">I agree to the Terms & Conditions.</span>
+                <input type="checkbox" name="terms" required style="width:auto;margin:0;"> I agree to the Terms & Conditions.
             </label>
             
             <button type="submit">Create Account</button>
         </form>
-        <a href="/login">Already a member? Log in</a>
+        <a href="/login" class="login-link">Already a member? Log in</a>
     </div>
     </body>
     </html>
@@ -756,6 +747,7 @@ def chatrooms():
     </html>
     '''
 
+# --- LOGIN PAGE (Full Screen, Centered, Beautiful) ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -765,28 +757,37 @@ def login():
         if user and check_password_hash(user.password_hash, password):
             session['user_id'] = user.id
             user.online = True
+            user.last_seen = datetime.datetime.now()
             db.session.commit()
             return redirect(url_for('home'))
         return "Invalid login!"
+    
     return '''
     <!DOCTYPE html>
     <html><head><title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;min-height:100vh;display:flex;justify-content:center;align-items:center;text-align:center;}
-    .login-box{background:#1a2a3e;padding:40px 30px;border-radius:20px;width:90%;max-width:400px;box-sizing:border-box;margin:auto;}
-    input{padding:14px;margin:10px 0;border-radius:10px;border:none;width:100%;box-sizing:border-box;font-size:16px;}
-    button{padding:14px;width:100%;background:#00bfff;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;margin-top:10px;}
-    a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;font-size:14px;}
-</style></head>
+        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;}
+        .login-container{width:90%;max-width:400px;text-align:center;padding:20px;}
+        h1{font-size:32px;color:#00bfff;margin-bottom:30px;font-weight:bold;letter-spacing:1px;}
+        input{width:100%;padding:16px;margin:12px 0;border-radius:12px;border:none;background:#1a2a3e;color:white;font-size:16px;box-sizing:border-box;}
+        input::placeholder{color:#888;}
+        button{width:100%;padding:16px;background:#00bfff;color:white;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;margin-top:10px;}
+        .signup-link{color:#00bfff;text-decoration:none;display:block;margin-top:20px;font-size:15px;}
+    </style>
+    </head>
     <body>
-    <h1>🧊 Welcome Back</h1>
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required><br>
-        <input type="password" name="password" placeholder="Password" required><br>
-        <button type="submit">Login</button>
-    </form>
-    <a href="/signup">Sign up</a>
-    </body></html>
+    <div class="login-container">
+        <h1>🧊 Welcome Back</h1>
+        <form method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <a href="/signup" class="signup-link">No account? Sign up here</a>
+    </div>
+    </body>
+    </html>
     '''
 
 # --- NEW FEATURES ROUTES ---
