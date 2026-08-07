@@ -2321,6 +2321,8 @@ def logout():
 # --- RUN APP ---
 if __name__ == '__main__':
     with app.app_context():
+        # Force creation of all database tables
         db.create_all()
+        print("✅ Database tables created successfully!")
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
 
