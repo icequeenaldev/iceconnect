@@ -500,8 +500,7 @@ def signup():
         new_user = User(username=username, fullname=fullname, age=age, gender=gender, country=country, password_hash=hashed_pw)
         db.session.add(new_user)
         db.session.commit()
-        from time import sleep
-sleep(1)
+        db.session.flush()
         session['user_id'] = new_user.id
         
         # Splash Screen
