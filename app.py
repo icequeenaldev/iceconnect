@@ -304,7 +304,13 @@ def home():
     if not user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
+    except Exception:
+        # 4. If ANYTHING goes wrong (e.g. session ID is broken), log out safely
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
     
+    # ... All your existing HOME code continues here ...
+    current_user = user
     # Get today's poll
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     poll = DailyPoll.query.filter_by(date_posted=today).first()
