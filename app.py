@@ -297,8 +297,13 @@ HOME_HTML = '''
 def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     user = db.session.get(User, int(session['user_id']))
-    current_user = user
+    
+    # 🔥 DOUBLE SAFETY CHECK 🔥
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
     
     # Get today's poll
     today = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -639,7 +644,13 @@ def create_room():
 def chatrooms():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     user = db.session.get(User, int(session['user_id']))
+    
+    # 🔥 DOUBLE SAFETY CHECK 🔥
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
     
     search_query = request.args.get('q', '').lower()
     
@@ -1094,9 +1105,17 @@ def vote(poll_id, choice):
 def profile(username):
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     user = User.query.filter_by(username=username).first()
+    
+    # 🔥 ADD THIS CHECK 🔥
     if not user:
-        return "User not found!"
+        return "User not found", 404
+    
+    session_user = db.session.get(User, int(session['user_id']))
+    if not session_user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
     
     if request.method == 'POST':
         if 'post_image' in request.files or 'post_caption' in request.form:
@@ -1500,7 +1519,11 @@ def inbox():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     user = db.session.get(User, int(session['user_id']))
-
+# 🔥 DOUBLE SAFETY CHECK 🔥
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+    
     
     # --- 1. COMPLIMENTS ---
     compliments = Compliment.query.filter_by(receiver=user.username).order_by(Compliment.timestamp.desc()).limit(10).all()
@@ -1655,7 +1678,11 @@ def leaderboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     current_user = db.session.get(User, int(session['user_id']))
-
+# 🔥 DOUBLE SAFETY CHECK 🔥
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+    
     rising_stars = User.query.filter_by(is_premium=False).order_by(User.xp.desc()).limit(10).all()
     youth_peak = User.query.filter(User.is_premium==True, User.age.between(16, 25)).order_by(User.xp.desc()).limit(10).all()
     premier_peak = User.query.filter(User.is_premium==True, User.age >= 26).order_by(User.xp.desc()).limit(10).all()
@@ -1805,7 +1832,11 @@ def settings():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     user = db.session.get(User, int(session['user_id']))
-
+# 🔥 DOUBLE SAFETY CHECK 🔥
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+    
     
     # STEP 1: The HTML content (kept as a clean text string)
     html_part = f'''
