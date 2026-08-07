@@ -499,13 +499,13 @@ def signup():
         <html>
         <head><title>Welcome</title>
         <style>
-            body{margin:0;padding:0;background:#0b1a2e;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;overflow:hidden;}
-            .splash{animation:fadeOut 3s forwards;animation-delay:2.5s;opacity:1;}
-            @keyframes fadeOut{0%{opacity:1;}100%{opacity:0;display:none;}}
-            h1{font-size:3em;margin-bottom:10px;color:#00bfff;}
-            p{font-size:1.2em;color:#ccc;line-height:1.5;}
-            .ice-icon{font-size:80px;display:block;margin-bottom:20px;}
-        </style>
+    body{margin:0;padding:0;background:#0b1a2e;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;overflow:hidden;}
+    .splash{animation:fadeOut 3s forwards;animation-delay:2.5s;opacity:1;}
+    @keyframes fadeOut{0%{opacity:1;}100%{opacity:0;display:none;}}
+    h1{font-size:3em;margin-bottom:10px;color:#00bfff;}
+    p{font-size:1.2em;color:#ccc;line-height:1.5;}
+    .ice-icon{font-size:80px;display:block;margin-bottom:20px;}
+</style>
         <script>
             setTimeout(function(){ window.location.href = "/"; }, 3000);
         </script>
@@ -527,17 +527,12 @@ def signup():
     <!DOCTYPE html>
     <html><head><title>Sign Up</title>
     <style>
-        body{font-family:Arial;background:#0b1a2e;color:white;text-align:center;padding:20px;}
-        .form-container{background:#1a2a3e;padding:30px;border-radius:15px;max-width:400px;margin:auto;}
-        input,select{padding:10px;border-radius:5px;border:none;width:100%;margin:8px 0;box-sizing:border-box;}
-        button{padding:10px 30px;background:#00bfff;color:white;border:none;border-radius:5px;cursor:pointer;width:100%;margin-top:15px;}
-        .terms-box{background:#0b1a2e;border:1px solid #00bfff;border-radius:10px;height:120px;overflow-y:scroll;padding:15px;text-align:left;font-size:12px;color:#ccc;margin:15px 0;}
-        .terms-box h3{color:#00bfff;margin:0 0 5px 0;font-size:14px;}
-        a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;font-size:14px;}
-        label{font-size:14px;display:flex;align-items:center;gap:10px;justify-content:center;margin:10px 0;}
-        .dob-row{display:flex;gap:5px;}
-        .dob-row select{flex:1;}
-    </style>
+    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;min-height:100vh;display:flex;justify-content:center;align-items:center;text-align:center;}
+    .login-box{background:#1a2a3e;padding:40px 30px;border-radius:20px;width:90%;max-width:400px;box-sizing:border-box;margin:auto;}
+    input{padding:14px;margin:10px 0;border-radius:10px;border:none;width:100%;box-sizing:border-box;font-size:16px;}
+    button{padding:14px;width:100%;background:#00bfff;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;margin-top:10px;}
+    a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;font-size:14px;}
+</style>
     </head>
     <body>
     <div class="form-container">
@@ -765,9 +760,13 @@ def login():
     return '''
     <!DOCTYPE html>
     <html><head><title>Login</title>
-    <style>body{font-family:Arial;background:#0b1a2e;color:white;text-align:center;padding:50px;}
-    input{padding:10px;border-radius:5px;border:none;width:200px;margin:5px;}
-    button{padding:10px 30px;background:#00bfff;color:white;border:none;border-radius:5px;cursor:pointer;}</style></head>
+    <style>
+    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;min-height:100vh;display:flex;justify-content:center;align-items:center;text-align:center;}
+    .login-box{background:#1a2a3e;padding:40px 30px;border-radius:20px;width:90%;max-width:400px;box-sizing:border-box;margin:auto;}
+    input{padding:14px;margin:10px 0;border-radius:10px;border:none;width:100%;box-sizing:border-box;font-size:16px;}
+    button{padding:14px;width:100%;background:#00bfff;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;margin-top:10px;}
+    a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;font-size:14px;}
+</style></head>
     <body>
     <h1>🧊 Welcome Back</h1>
     <form method="POST">
@@ -1137,7 +1136,7 @@ def profile(username):
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{padding:12px;max-width:100%;margin:auto;}
+    .container{width:100%;max-width:600px;margin:auto;box-sizing:border-box;}
     
     /* Profile Card */
     .card{background:#1a2a3e;padding:30px;border-radius:20px;position:relative;}
@@ -1815,7 +1814,7 @@ def settings():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{padding:12px;max-width:100%;margin:auto;}
+        .container{width:100%;max-width:600px;margin:auto;box-sizing:border-box;}
         .header{{display:flex;align-items:center;gap:15px;margin-bottom:20px;}}
         .back-btn{{color:#00bfff;text-decoration:none;font-size:24px;}}
         h1{{margin:0;font-size:24px;}}
