@@ -2305,6 +2305,13 @@ def report_user():
     db.session.commit()
     return jsonify({'success': True})
 
+# --- TEMPORARY DATABASE SETUP ROUTE ---
+@app.route('/setup_db')
+def setup_db():
+    with app.app_context():
+        db.create_all()
+    return "✅ Database tables created successfully! You can now go back to the app."
+
 # --- LOGOUT ---
 @app.route('/logout')
 def logout():
