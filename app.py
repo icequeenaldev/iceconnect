@@ -297,7 +297,7 @@ HOME_HTML = '''
 def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
     current_user = user
     
     # Get today's poll
@@ -590,7 +590,8 @@ def signup():
 def create_room():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+    
     
     if request.method == 'POST':
         room_name = request.form['room_name'].lower().replace(' ', '_')
@@ -643,7 +644,8 @@ def create_room():
 def chatrooms():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+    
     search_query = request.args.get('q', '').lower()
     
     default_rooms = ['global', 'youth', 'premier', 'gaming', 'music', 'study']
@@ -783,7 +785,8 @@ def mood():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     if request.method == 'POST':
-        user = db.session.get(User, session.get('user_id'))
+        user = db.session.get(User, int(session['user_id']))
+        
         user.mood_color = request.form['color']
         db.session.commit()
         add_xp(user.username, 5)
@@ -816,7 +819,8 @@ def capsule():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     if request.method == 'POST':
-        user = db.session.get(User, session.get('user_id'))
+        user = db.session.get(User, int(session['user_id']))
+    
         content = request.form['content']
         days = int(request.form['days'])
         unlock_date = datetime.datetime.now() + datetime.timedelta(days=days)
@@ -859,7 +863,8 @@ def compliment():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     if request.method == 'POST':
-        user = db.session.get(User, session.get('user_id'))
+        user = db.session.get(User, int(session['user_id']))
+        
         receiver = request.form['receiver']
         content = request.form['content']
         last_hour = Compliment.query.filter_by(receiver=receiver).order_by(Compliment.timestamp.desc()).first()
@@ -1021,7 +1026,8 @@ def handle_dm_typing(data):
 def poll():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     poll = DailyPoll.query.filter_by(date_posted=today).first()
     if not poll:
@@ -1074,7 +1080,8 @@ def poll():
 def vote(poll_id, choice):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     if Vote.query.filter_by(username=user.username, poll_id=poll_id).first():
         return "You already voted today!"
     vote = Vote(username=user.username, poll_id=int(poll_id), choice=int(choice))
@@ -1214,7 +1221,8 @@ def profile(username):
 def chat_room(room_name):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     if room_name == 'youth' and user.age > 25:
         return "<h1>⛔ Access Denied</h1><p>Youth Hub is strictly for ages 16-25.</p>"
     if room_name == 'premier' and user.age < 26:
@@ -1378,7 +1386,8 @@ def handle_join_room(data):
 @socketio.on('connect')
 def handle_connect():
     if 'user_id' in session:
-        user = db.session.get(User, session.get('user_id'))
+        user = db.session.get(User, int(session['user_id']))
+
         user.online = True
         db.session.commit()
         emit('user_status', {'username': user.username, 'online': True}, broadcast=True)
@@ -1386,14 +1395,16 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     if 'user_id' in session:
-        user = db.session.get(User, session.get('user_id'))
+        user = db.session.get(User, int(session['user_id']))
+
         user.online = False
         db.session.commit()
         emit('user_status', {'username': user.username, 'online': False}, broadcast=True)
 
 @socketio.on('send_message')
 def handle_message(data):
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     room = data['room']
     reply_id = data.get('reply_id')
     reply_msg = Message.query.get(reply_id) if reply_id else None
@@ -1430,7 +1441,8 @@ def handle_delete(data):
 def compose():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     
     if request.method == 'POST':
         recipient = request.form['recipient']
@@ -1487,7 +1499,8 @@ def compose():
 def inbox():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     
     # --- 1. COMPLIMENTS ---
     compliments = Compliment.query.filter_by(receiver=user.username).order_by(Compliment.timestamp.desc()).limit(10).all()
@@ -1641,7 +1654,8 @@ def inbox():
 def leaderboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    current_user = db.session.get(User, session.get('user_id'))
+    current_user = db.session.get(User, int(session['user_id']))
+
     rising_stars = User.query.filter_by(is_premium=False).order_by(User.xp.desc()).limit(10).all()
     youth_peak = User.query.filter(User.is_premium==True, User.age.between(16, 25)).order_by(User.xp.desc()).limit(10).all()
     premier_peak = User.query.filter(User.is_premium==True, User.age >= 26).order_by(User.xp.desc()).limit(10).all()
@@ -1790,7 +1804,8 @@ def profile_rooms(username):
 def settings():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     
     # STEP 1: The HTML content (kept as a clean text string)
     html_part = f'''
@@ -2011,7 +2026,8 @@ def feedback():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     data = request.get_json()
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     
     feedback_msg = f"{user.username} rated {data['rating']} stars: {data['message']}"
     with open('feedback_log.txt', 'a') as f:
@@ -2024,7 +2040,8 @@ def feedback():
 def privacy():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     return f'''
     <!DOCTYPE html>
     <html><head><title>Privacy & Security</title>
@@ -2105,7 +2122,8 @@ def privacy():
 def blocked():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     return f'''
     <!DOCTYPE html>
     <html><head><title>Blocked Users</title>
@@ -2156,7 +2174,8 @@ def blocked():
 def delete_room(room_name):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     
     # Only allow the creator to delete the room
     if not room_name.startswith(user.username + '_'):
@@ -2184,7 +2203,8 @@ def like_post(post_id):
 def comment_post(post_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     data = request.get_json()
     content = data.get('content')
     if content:
@@ -2210,7 +2230,8 @@ def read_comments(post_id):
 def admin_panel():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     
     # ONLY THE FOUNDER CAN ACCESS THIS
     if user.username != 'IceQueenAL':
