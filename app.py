@@ -148,7 +148,7 @@ HOME_HTML = '''
 <style>
     * { box-sizing: border-box; }
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{padding:15px;max-width:450px;margin:auto;}
+    .container{padding:12px;max-width:100%;margin:auto;}
     
     /* TOP SEARCH BAR */
     .top-bar{display:flex;gap:10px;margin-bottom:15px;}
@@ -360,7 +360,7 @@ def home():
     <style>
         * { box-sizing: border-box; }
         body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-        .container{padding:15px;max-width:450px;margin:auto;}
+        .container{padding:12px;max-width:100%;margin:auto;}
         .top-bar{display:flex;gap:10px;margin-bottom:15px;}
         .search-input{flex:1;padding:12px;border-radius:25px;border:none;background:#1a2a3e;color:white;font-size:14px;}
         .search-input::placeholder{color:#666;}
@@ -615,7 +615,7 @@ def create_room():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:20px;}
-        .container{max-width:450px;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}
+        .container{padding:12px;max-width:100%;margin:auto;}
         h1{color:#00bfff;}
         input,textarea{width:100%;padding:10px;border-radius:8px;border:none;margin:10px 0;box-sizing:border-box;}
         textarea{resize:none;height:80px;}
@@ -713,7 +713,7 @@ def chatrooms():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{padding:15px;max-width:450px;margin:auto;}}
+        .container{padding:12px;max-width:100%;margin:auto;}
         h1{{margin-top:10px;}}
         .room-card{{background:#1a2a3e;border-radius:15px;padding:15px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:white;}}
         .room-info{{display:flex;flex-direction:column;}}
@@ -1137,7 +1137,7 @@ def profile(username):
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{padding:20px;max-width:450px;margin:auto;}
+    .container{padding:12px;max-width:100%;margin:auto;}
     
     /* Profile Card */
     .card{background:#1a2a3e;padding:30px;border-radius:20px;position:relative;}
@@ -1468,7 +1468,7 @@ def compose():
     <html><head><title>Compose</title>
     <style>
         body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:20px;}
-        .container{max-width:450px;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}
+        .container{max-width:100%;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}
         h1{color:#00bfff;}
         input,textarea{width:100%;padding:10px;border-radius:8px;border:none;margin:10px 0;box-sizing:border-box;}
         .btn{width:100%;padding:12px;background:#00bfff;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:16px;}
@@ -1577,7 +1577,7 @@ def inbox():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{padding:15px;max-width:450px;margin:auto;}}
+        .container{padding:12px;max-width:100%;margin:auto;}
         h1{{margin-top:10px;}}
         .tabs{{display:flex;gap:20px;margin-bottom:15px;border-bottom:1px solid #334;padding-bottom:10px;}}
         .tab{{font-weight:bold;cursor:pointer;color:#888;padding-bottom:10px;margin-bottom:-11px;}}
@@ -1715,7 +1715,7 @@ def leaderboard():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{padding:15px;max-width:450px;margin:auto;}}
+        .container{padding:12px;max-width:100%;margin:auto;}
         h1{{margin-top:10px;}}
         .tabs{{display:flex;gap:5px;margin-bottom:20px;overflow-x:auto;}}
         .tab{{flex:1;min-width:80px;padding:8px 5px;text-align:center;background:#1a2a3e;border-radius:10px;cursor:pointer;color:#888;font-size:12px;font-weight:bold;}}
@@ -1815,7 +1815,7 @@ def settings():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{padding:15px;max-width:450px;margin:auto;}}
+        .container{padding:12px;max-width:100%;margin:auto;}
         .header{{display:flex;align-items:center;gap:15px;margin-bottom:20px;}}
         .back-btn{{color:#00bfff;text-decoration:none;font-size:24px;}}
         h1{{margin:0;font-size:24px;}}
@@ -1974,7 +1974,7 @@ def about():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:20px;}
-        .container{max-width:600px;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}
+        .container{max-width:100%;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}
         h1{color:#00bfff;border-bottom:1px solid #334;padding-bottom:10px;}
         h3{color:#00bfff;margin-top:20px;}
         p{color:#ddd;line-height:1.6;font-size:15px;}
@@ -2049,7 +2049,7 @@ def privacy():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{padding:15px;max-width:450px;margin:auto;}}
+        .container{padding:12px;max-width:100%;margin:auto;}
         .header{{display:flex;align-items:center;gap:15px;margin-bottom:20px;}}
         .back-btn{{color:#00bfff;text-decoration:none;font-size:24px;}}
         h1{{margin:0;font-size:24px;}}
@@ -2131,7 +2131,7 @@ def blocked():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{padding:15px;max-width:450px;margin:auto;}}
+        .container{padding:12px;max-width:100%;margin:auto;}
         .header{{display:flex;align-items:center;gap:15px;margin-bottom:20px;}}
         .back-btn{{color:#00bfff;text-decoration:none;font-size:24px;}}
         h1{{margin:0;font-size:24px;}}
@@ -2258,7 +2258,7 @@ def admin_panel():
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:20px;}}
-        .container{{max-width:600px;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}}
+        .container{{max-width:100%;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}}
         h1{{color:#00bfff;border-bottom:1px solid #334;padding-bottom:10px;}}
         .stat{{background:#2a3a5e;padding:15px;border-radius:10px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;}}
         .stat-number{{font-size:24px;font-weight:bold;color:#00bfff;}}
