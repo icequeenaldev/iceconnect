@@ -1420,7 +1420,8 @@ def handle_message(data):
 
 @socketio.on('send_voice')
 def handle_voice(data):
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session['user_id']))
+
     room = data['room']
     # Save voice message to DB
     new_msg = Message(room=room, username=user.username, country=user.country, content=data['audio'])
