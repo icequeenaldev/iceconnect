@@ -298,16 +298,19 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
+    try:
+    # 1. Try to fetch the user from the database using the session ID
     user = db.session.get(User, int(session['user_id']))
     
-    # 🔥 DOUBLE SAFETY CHECK 🔥
+    # 2. If the user doesn't exist in the database, kill the session
     if not user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
-    except Exception:
-        # 4. If ANYTHING goes wrong (e.g. session ID is broken), log out safely
-        session.pop('user_id', None)
-        return redirect(url_for('login'))
+        
+except Exception:
+    # 3. If ANYTHING goes wrong (e.g. session ID is broken), log out safely
+    session.pop('user_id', None)
+    return redirect(url_for('login'))
     
     # ... All your existing HOME code continues here ...
     current_user = user
