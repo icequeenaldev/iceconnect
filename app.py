@@ -298,16 +298,14 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-try:
-    user = db.session.get(User, int(session['user_id']))
-    
-    if not user:
+    try:  # ← This MUST be indented inside the function
+        user = db.session.get(User, int(session['user_id']))
+        if not user:
+            session.pop('user_id', None)
+            return redirect(url_for('login'))
+    except Exception:
         session.pop('user_id', None)
         return redirect(url_for('login'))
-        
-except Exception:
-    session.pop('user_id', None)
-    return redirect(url_for('login'))
     
     # ... All your existing HOME code continues here ...
     current_user = user
