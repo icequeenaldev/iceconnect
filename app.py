@@ -506,25 +506,27 @@ def signup():
         <!DOCTYPE html>
         <html>
         <head><title>Welcome</title>
-        <style>
-            body{margin:0;padding:0;background:#0b1a2e;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;overflow:hidden;}
-            .splash{animation:fadeOut 3s forwards;animation-delay:2.5s;opacity:1;}
-            @keyframes fadeOut{0%{opacity:1;}100%{opacity:0;display:none;}}
-            h1{font-size:3em;margin-bottom:10px;color:#00bfff;}
-            p{font-size:1.2em;color:#ccc;line-height:1.5;}
-            .ice-icon{font-size:80px;display:block;margin-bottom:20px;}
-        </style>
-        <script>setTimeout(function(){ window.location.href = "/"; }, 3000);</script>
-        </head>
-        <body>
-        <div class="splash">
-            <span class="ice-icon">🧊</span>
-            <h1>Welcome to IceConnect</h1>
-            <p>Where you meet millions of people around the world.</p>
-        </div>
-        </body>
-        </html>
-        ''')
+<style>
+    body{margin:0;padding:0;background:#0b1a2e;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;overflow:hidden;flex-direction:column;}
+    .splash{animation:fadeOut 3s forwards;animation-delay:2.5s;opacity:1;}
+    @keyframes fadeOut{0%{opacity:1;}100%{opacity:0;display:none;}}
+    h1{font-size:3em;margin-bottom:5px;color:#00bfff;font-weight:bold;}
+    h2{font-size:1.5em;margin-bottom:10px;color:#fff;}
+    p{font-size:1.2em;color:#ccc;line-height:1.5;}
+    .ice-icon{font-size:80px;display:block;margin-bottom:20px;}
+</style>
+<script>setTimeout(function(){ window.location.href = "/"; }, 3000);</script>
+</head>
+<body>
+<div class="splash">
+    <span class="ice-icon">🧊</span>
+    <h1>Welcome to IceConnect</h1>
+    <h2>{new_user.username}</h2>
+    <p>Meet millions of people around the world, compete, and share your vibe.</p>
+</div>
+</body>
+</html>
+''')
     
     return '''
     <!DOCTYPE html>
@@ -635,15 +637,13 @@ def create_room():
     </html>
     '''
 
-# --- CHATROOMS PAGE (Fixed Delete Button) ---
+# --- CHATROOMS PAGE (Fixed Session) ---
 @app.route('/chatrooms')
 def chatrooms():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     user = db.session.get(User, int(session['user_id']))
-    
-    # 🔥 DOUBLE SAFETY CHECK 🔥
     if not user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
@@ -1517,17 +1517,16 @@ def compose():
     </html>
     '''
 
-# --- INBOX PAGE (With Full DM History - Sent & Received) ---
+# --- INBOX PAGE (Fixed Session) ---
 @app.route('/inbox')
 def inbox():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     user = db.session.get(User, int(session['user_id']))
-# 🔥 DOUBLE SAFETY CHECK 🔥
     if not user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
-    
     
     # --- 1. COMPLIMENTS ---
     compliments = Compliment.query.filter_by(receiver=user.username).order_by(Compliment.timestamp.desc()).limit(10).all()
@@ -1681,8 +1680,8 @@ def inbox():
 def leaderboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    current_user = db.session.get(User, int(session['user_id']))
-# 🔥 DOUBLE SAFETY CHECK 🔥
+    
+    user = db.session.get(User, int(session['user_id']))
     if not user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
@@ -1830,13 +1829,13 @@ def profile_rooms(username):
     
     return html + '<a href="/" style="color:#00bfff;text-decoration:none;display:block;margin-top:20px;">⬅ Back</a>'
 
-# --- SETTINGS PAGE (Python Clean String) ---
+# --- SETTINGS PAGE (Fixed Session) ---
 @app.route('/settings')
 def settings():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     user = db.session.get(User, int(session['user_id']))
-# 🔥 DOUBLE SAFETY CHECK 🔥
     if not user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
