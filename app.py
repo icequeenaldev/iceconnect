@@ -7,7 +7,7 @@ import os, datetime, random, base64
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-key-change-this')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///iceconnect.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 socketio = SocketIO(app, max_http_buffer_size=10000000)
 
@@ -2354,8 +2354,7 @@ def logout():
 # --- RUN APP ---
 if __name__ == '__main__':
     with app.app_context():
-        # Force creation of all database tables
         db.create_all()
-        print("✅ Database tables created successfully!")
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+        print("✅ Database connected and tables created!")
+    socketio.run(app, host='0.0.0.0', port=5000)
 
