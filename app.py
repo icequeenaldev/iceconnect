@@ -761,15 +761,12 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        from werkzeug.security import check_password_hash
-if user and user.password_hash and check_password_hash(user.password_hash, password):
+        if user and check_password_hash(user.password_hash, password):
             session['user_id'] = user.id
             user.online = True
-            user.last_seen = datetime.datetime.now()
             db.session.commit()
             return redirect(url_for('home'))
-        return "Invalid login!"
-    
+        return "Invalid login!"  # ← This should be indented 4 spaces
     return '''
     <!DOCTYPE html>
     <html><head><title>Login</title>
