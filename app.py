@@ -1829,7 +1829,7 @@ def profile_rooms(username):
     
     return html + '<a href="/" style="color:#00bfff;text-decoration:none;display:block;margin-top:20px;">⬅ Back</a>'
 
-# --- SETTINGS PAGE (Fixed Session) ---
+# --- SETTINGS PAGE (Full Screen, Fixed Session, Beautiful) ---
 @app.route('/settings')
 def settings():
     if 'user_id' not in session:
@@ -1840,27 +1840,22 @@ def settings():
         session.pop('user_id', None)
         return redirect(url_for('login'))
     
-    
-    # STEP 1: The HTML content (kept as a clean text string)
     html_part = f'''
     <!DOCTYPE html>
     <html><head><title>Settings</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{width:100%;max-width:600px;margin:auto;box-sizing:border-box;}
+        .container{{padding:15px;width:100%;max-width:600px;margin:auto;box-sizing:border-box;}}
         .header{{display:flex;align-items:center;gap:15px;margin-bottom:20px;}}
         .back-btn{{color:#00bfff;text-decoration:none;font-size:24px;}}
         h1{{margin:0;font-size:24px;}}
-        
         .settings-item{{display:flex;align-items:center;justify-content:space-between;padding:15px;background:#1a2a3e;border-radius:12px;margin-bottom:10px;text-decoration:none;color:white;}}
         .settings-item:hover{{background:#2a3a5e;}}
         .settings-icon{{font-size:20px;margin-right:15px;}}
         .settings-text{{flex:1;font-size:15px;}}
         .settings-arrow{{color:#888;font-size:14px;}}
-        
         .section-title{{color:#888;font-size:13px;margin:20px 0 10px 5px;text-transform:uppercase;letter-spacing:1px;}}
-        
         .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
         .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
         .nav-item:hover,.nav-item.active{{color:#00bfff;}}
@@ -1931,14 +1926,14 @@ def settings():
         <a href="/profile/{user.username}" class="nav-item active"><span class="nav-icon">👤</span>Profile</a>
     </div>
     
-    <div id="feedbackModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;justify-content:center;align-items:center;">
-        <div style="background:#1a2a3e;padding:30px;border-radius:20px;max-width:400px;width:90%;position:relative;">
+    <div id="feedbackModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;">
+        <div style="background:#1a2a3e;padding:30px;border-radius:20px;max-width:400px;width:90%;">
             <h2 style="color:#00bfff;margin-top:0;">💬 Send Feedback</h2>
             <p style="color:#888;font-size:14px;">Help us improve IceConnect!</p>
             <div style="font-size:30px;margin:15px 0;cursor:pointer;">
                 <span onclick="setRating(1)">☆</span><span onclick="setRating(2)">☆</span><span onclick="setRating(3)">☆</span><span onclick="setRating(4)">☆</span><span onclick="setRating(5)">☆</span>
             </div>
-            <textarea id="feedbackMsg" placeholder="Write your thoughts here..." style="width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0;height:80px;resize:none;color:black;"></textarea>
+            <textarea id="feedbackMsg" placeholder="Write your thoughts here..." style="width:100%;padding:10px;border-radius:10px;border:none;margin:10px 0;height:80px;resize:none;"></textarea>
             <button onclick="submitFeedback()" style="width:100%;padding:12px;background:#00bfff;color:white;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">Send Feedback</button>
             <button onclick="closeFeedback()" style="width:100%;padding:10px;background:transparent;color:#888;border:none;margin-top:10px;cursor:pointer;">Cancel</button>
         </div>
@@ -1947,28 +1942,22 @@ def settings():
     </html>
     '''
     
-    # STEP 2: The JavaScript (Kept OUTSIDE the triple quotes)
-    # Because we return html_part + script_part, Python NEVER sees the script!
     script_part = '''
     <script>
         let currentRating = 0;
-        
         function setRating(n) {
             currentRating = n;
             let stars = document.querySelectorAll('#feedbackModal span');
             stars.forEach((s, i) => s.innerText = i < n ? '⭐' : '☆');
         }
-        
         function openFeedback() {
             document.getElementById('feedbackModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
-        
         function closeFeedback() {
             document.getElementById('feedbackModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-        
         function submitFeedback() {
             let msg = document.getElementById('feedbackMsg').value;
             if(currentRating === 0) { 
@@ -1993,9 +1982,9 @@ def settings():
     </script>
     '''
     
-    # Return them combined
     return html_part + script_part
 
+    
 # --- ABOUT PAGE (The long professional version) ---
 @app.route('/about')
 def about():
