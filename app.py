@@ -643,8 +643,12 @@ def chatrooms():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    user = db.session.get(User, int(session['user_id']))
-    if not user:
+    try:
+        user = db.session.get(User, int(session['user_id']))
+        if not user:
+            session.pop('user_id', None)
+            return redirect(url_for('login'))
+    except Exception:
         session.pop('user_id', None)
         return redirect(url_for('login'))
     
@@ -682,16 +686,6 @@ def chatrooms():
     for r in room_names:
         c, v = get_room_stats(r)
         display_name = get_display_name(r)
-        
-        # --- FIX: Check if the room is owned by the current user ---
-        delete_btn = ""
-        if r not in default_rooms:
-            # Check if this room was created by the current user
-            # We will fetch the very first message sent in this room to check the creator
-            first_msg = Message.query.filter_by(room=r).order_by(Message.timestamp).first()
-            if first_msg and first_msg.username == user.username:
-                delete_btn = f'<a href="/delete_room/{r}" style="color:#ff5555;font-size:12px;text-decoration:none;float:right;background:#1a2a3e;padding:4px 8px;border-radius:8px;margin-top:5px;">🗑️ Delete Room</a>'
-        
         room_html += f'''
         <div class="room-wrapper" style="position:relative;">
             <a href="/chat/{r}" class="room-card">
@@ -701,7 +695,6 @@ def chatrooms():
                 </div>
                 <span class="room-vibe">Enter ➡️</span>
             </a>
-            {delete_btn}
         </div>
         '''
     
@@ -714,8 +707,9 @@ def chatrooms():
     <head><title>Chatrooms</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
+        * {{ box-sizing: border-box; }}
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{padding:12px;max-width:100%;margin:auto;}
+        .container{{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}}
         h1{{margin-top:10px;}}
         .room-card{{background:#1a2a3e;border-radius:15px;padding:15px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:white;}}
         .room-info{{display:flex;flex-direction:column;}}
@@ -724,8 +718,7 @@ def chatrooms():
         .room-vibe{{font-size:11px;background:#2a3a5e;padding:4px 8px;border-radius:12px;color:#ccc;}}
         .btn{{padding:10px 20px;background:#00bfff;color:white;border:none;border-radius:8px;cursor:pointer;text-decoration:none;font-size:14px;}}
         .add-btn{{background:#6f42c1;}}
-        
-        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
+        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;}}
         .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
         .nav-item:hover,.nav-item.active{{color:#00bfff;}}
         .nav-icon{{font-size:24px;margin-bottom:4px;}}
@@ -751,7 +744,6 @@ def chatrooms():
     </body>
     </html>
     '''
-
 # --- LOGIN PAGE (Full Screen, Centered, Beautiful) ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1159,7 +1151,7 @@ def profile(username):
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{width:100%;max-width:600px;margin:auto;box-sizing:border-box;}
+    .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
     
     /* Profile Card */
     .card{background:#1a2a3e;padding:30px;border-radius:20px;position:relative;}
@@ -1523,8 +1515,12 @@ def inbox():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    user = db.session.get(User, int(session['user_id']))
-    if not user:
+    try:
+        user = db.session.get(User, int(session['user_id']))
+        if not user:
+            session.pop('user_id', None)
+            return redirect(url_for('login'))
+    except Exception:
         session.pop('user_id', None)
         return redirect(url_for('login'))
     
@@ -1546,8 +1542,7 @@ def inbox():
     else:
         compliment_html = '<p style="color:#666;text-align:center;padding:20px;">No compliments yet. Spread some kindness! 💖</p>'
     
-    # --- 2. DIRECT MESSAGES (Unified Inbox/Outbox) ---
-    # Find all unique DM rooms the user is part of
+    # --- 2. DIRECT MESSAGES ---
     user_rooms = db.session.query(Message.room).filter(
         (Message.room.contains(user.username + '_')) | (Message.room.contains('_' + user.username))
     ).distinct().all()
@@ -1556,10 +1551,8 @@ def inbox():
     dm_threads = []
     
     for room in room_names:
-        # Get the last message in this thread
         last_msg = Message.query.filter_by(room=room).order_by(Message.timestamp.desc()).first()
         if last_msg:
-            # Determine the other person's name
             parts = room.split('_')
             other_person = parts[1] if parts[0] == user.username else parts[0]
             dm_threads.append({
@@ -1570,13 +1563,11 @@ def inbox():
                 'sender': last_msg.username
             })
     
-    # Sort by most recent first
     dm_threads.sort(key=lambda x: x['time'], reverse=True)
     
     dm_html = ""
     if dm_threads:
         for thread in dm_threads:
-            # Determine if the last message was sent by the user (Outbox) or received (Inbox)
             label = "📤 Sent" if thread['sender'] == user.username else "📥 Received"
             dm_html += f'''
             <a href="/dm/{thread['other']}" style="text-decoration:none;color:white;">
@@ -1601,32 +1592,28 @@ def inbox():
     <head><title>Inbox</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
+        *{{box-sizing:border-box;}}
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{padding:12px;max-width:100%;margin:auto;}
+        .container{{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}}
         h1{{margin-top:10px;}}
         .tabs{{display:flex;gap:20px;margin-bottom:15px;border-bottom:1px solid #334;padding-bottom:10px;}}
         .tab{{font-weight:bold;cursor:pointer;color:#888;padding-bottom:10px;margin-bottom:-11px;}}
         .tab.active{{color:#00bfff;border-bottom:2px solid #00bfff;}}
-        
         .inbox-item{{background:#1a2a3e;border-radius:12px;padding:15px;margin-bottom:12px;display:flex;align-items:flex-start;gap:15px;}}
         .inbox-icon{{font-size:24px;margin-top:2px;}}
         .inbox-content{{flex:1;}}
         .inbox-title{{font-weight:bold;color:#00bfff;font-size:15px;}}
         .inbox-message{{font-size:14px;color:#ddd;margin:4px 0;}}
         .inbox-time{{font-size:11px;color:#666;}}
-        
         .dm-thread{{background:#1a2a3e;border-radius:12px;padding:15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}}
         .dm-user{{font-weight:bold;font-size:16px;color:#00bfff;}}
         .dm-preview{{font-size:13px;color:#888;display:block;margin-top:4px;}}
         .dm-meta{{text-align:right;font-size:12px;color:#666;}}
         .dm-label{{display:block;font-size:11px;}}
-        
         .tab-content{{display:none;}}
         .tab-content.active{{display:block;}}
-        
         .compose-btn{{background:#28a745;color:white;border:none;border-radius:30px;padding:10px 20px;cursor:pointer;font-weight:bold;float:right;margin-top:10px;text-decoration:none;}}
-        
-        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
+        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;}}
         .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
         .nav-item:hover,.nav-item.active{{color:#00bfff;}}
         .nav-icon{{font-size:24px;margin-bottom:4px;}}
@@ -1674,18 +1661,22 @@ def inbox():
     </body>
     </html>
     '''
-
 # --- LEADERBOARD PAGE (With Nav Bar) ---
 @app.route('/leaderboard')
 def leaderboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    user = db.session.get(User, int(session['user_id']))
-    if not user:
+    try:
+        user = db.session.get(User, int(session['user_id']))
+        if not user:
+            session.pop('user_id', None)
+            return redirect(url_for('login'))
+    except Exception:
         session.pop('user_id', None)
         return redirect(url_for('login'))
     
+    current_user = user
     rising_stars = User.query.filter_by(is_premium=False).order_by(User.xp.desc()).limit(10).all()
     youth_peak = User.query.filter(User.is_premium==True, User.age.between(16, 25)).order_by(User.xp.desc()).limit(10).all()
     premier_peak = User.query.filter(User.is_premium==True, User.age >= 26).order_by(User.xp.desc()).limit(10).all()
@@ -1700,7 +1691,6 @@ def leaderboard():
             rank = i + 1
             medal = ''
             title = ''
-            row_class = ''
             if rank == 1:
                 medal = '🥇'
                 if tier_name == 'rising': title = 'The Shard Champion'
@@ -1722,7 +1712,7 @@ def leaderboard():
                 elif tier_name == 'youth': title = 'The Frost Guardian'
                 elif tier_name == 'premier': title = 'The Crystal Guard'
             html += f'''
-            <div class="rank-card {row_class}">
+            <div class="rank-card">
                 <div style="display:flex;align-items:center;gap:12px;flex:1;">
                     <span style="width:30px;font-weight:bold;color:#888;">{medal}</span>
                     <img src="{u.profile_pic}" class="rank-avatar">
@@ -1743,22 +1733,21 @@ def leaderboard():
     <head><title>Leaderboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
+        *{{box-sizing:border-box;}}
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{padding:12px;max-width:100%;margin:auto;}
+        .container{{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}}
         h1{{margin-top:10px;}}
         .tabs{{display:flex;gap:5px;margin-bottom:20px;overflow-x:auto;}}
         .tab{{flex:1;min-width:80px;padding:8px 5px;text-align:center;background:#1a2a3e;border-radius:10px;cursor:pointer;color:#888;font-size:12px;font-weight:bold;}}
         .tab.active{{background:#00bfff;color:white;}}
-        .rank-card{{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;margin-bottom:8px;}}
+        .rank-card{{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;margin-bottom:8px;background:#1a2a3e;}}
         .rank-avatar{{width:35px;height:35px;border-radius:50%;object-fit:cover;}}
         .rank-info{{display:flex;flex-direction:column;}}
         .rank-name{{font-weight:bold;color:#00bfff;font-size:14px;}}
         .rank-xp{{font-size:11px;color:#888;}}
         .tab-content{{display:none;}}
         .tab-content.active{{display:block;}}
-        
-        /* BOTTOM NAV BAR */
-        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
+        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;}}
         .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
         .nav-item:hover,.nav-item.active{{color:#00bfff;}}
         .nav-icon{{font-size:24px;margin-bottom:4px;}}
@@ -1796,7 +1785,6 @@ def leaderboard():
         }}
     </script>
     
-    <!-- BOTTOM NAVIGATION BAR -->
     <div class="bottom-nav">
         <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
         <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
@@ -2063,135 +2051,121 @@ def feedback():
 def privacy():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, int(session['user_id']))
-
-    return f'''
+    try:
+        user = db.session.get(User, int(session['user_id']))
+        if not user:
+            session.pop('user_id', None)
+            return redirect(url_for('login'))
+    except Exception:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+    
+    return render_template_string('''
     <!DOCTYPE html>
-    <html><head><title>Privacy & Security</title>
+    <html>
+    <head><title>Privacy & Security</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{padding:12px;max-width:100%;margin:auto;}
-        .header{{display:flex;align-items:center;gap:15px;margin-bottom:20px;}}
-        .back-btn{{color:#00bfff;text-decoration:none;font-size:24px;}}
-        h1{{margin:0;font-size:24px;}}
-        .setting-item{{display:flex;align-items:center;justify-content:space-between;padding:15px;background:#1a2a3e;border-radius:12px;margin-bottom:10px;}}
-        .setting-label{{font-size:15px;}}
-        .setting-desc{{font-size:12px;color:#888;display:block;}}
-        .toggle{{position:relative;width:50px;height:28px;background:#334;border-radius:14px;cursor:pointer;transition:0.3s;}}
-        .toggle.active{{background:#00bfff;}}
-        .toggle::after{{content:'';position:absolute;width:22px;height:22px;background:white;border-radius:50%;top:3px;left:3px;transition:0.3s;}}
-        .toggle.active::after{{left:25px;}}
-        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
-        .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
-        .nav-item:hover,.nav-item.active{{color:#00bfff;}}
-        .nav-icon{{font-size:24px;margin-bottom:4px;}}
+        * { box-sizing: border-box; }
+        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
+        .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
+        .card{background:#1a2a3e;padding:20px;border-radius:15px;margin-bottom:15px;}
+        h1{color:#00bfff;}
+        .setting-item{display:flex;justify-content:space-between;padding:15px 0;border-bottom:1px solid #334;}
+        .setting-item:last-child{border-bottom:none;}
+        .btn{background:#00bfff;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;}
+        .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;}
+        .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
+        .nav-item:hover,.nav-item.active{color:#00bfff;}
+        .nav-icon{font-size:24px;margin-bottom:4px;}
     </style>
     </head>
     <body>
     <div class="container">
-        <div class="header">
-            <a href="/settings" class="back-btn">⬅</a>
+        <div class="card">
             <h1>🔒 Privacy & Security</h1>
-        </div>
-        
-        <div class="setting-item">
-            <div>
-                <span class="setting-label">Show Online Status</span>
-                <span class="setting-desc">Let others see when you're online</span>
+            <div class="setting-item">
+                <span>🔐 Two-Factor Authentication</span>
+                <span style="color:#888;">Coming Soon</span>
             </div>
-            <div class="toggle active" onclick="toggleStatus(this)"></div>
-        </div>
-        
-        <div class="setting-item">
-            <div>
-                <span class="setting-label">Allow DMs from Anyone</span>
-                <span class="setting-desc">Receive messages from users you don't follow</span>
+            <div class="setting-item">
+                <span>👁️ Who can see my profile</span>
+                <span style="color:#888;">Everyone</span>
             </div>
-            <div class="toggle active" onclick="toggleDM(this)"></div>
-        </div>
-        
-        <div class="setting-item" style="background:#2a1a1a;border:1px solid #ff5555;">
-            <div>
-                <span class="setting-label" style="color:#ff5555;">🚫 Manage Blocked Users</span>
-                <span class="setting-desc">View and unblock users</span>
+            <div class="setting-item">
+                <span>📧 Email Notifications</span>
+                <span style="color:#888;">On</span>
             </div>
-            <a href="/blocked" style="color:#00bfff;text-decoration:none;font-weight:bold;">View ›</a>
+            <div class="setting-item">
+                <span>🗑️ Delete Account</span>
+                <button class="btn" style="background:#ff5555;" onclick="alert('Are you sure? This cannot be undone.')">Delete</button>
+            </div>
         </div>
+        <a href="/settings" style="color:#00bfff;text-decoration:none;display:block;text-align:center;margin-top:10px;">⬅ Back to Settings</a>
     </div>
-    
     <div class="bottom-nav">
         <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
         <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
         <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏆</span>Leaderboard</a>
         <a href="/inbox" class="nav-item"><span class="nav-icon">📨</span>Inbox</a>
-        <a href="/profile/{user.username}" class="nav-item active"><span class="nav-icon">👤</span>Profile</a>
+        <a href="/profile/''' + user.username + '''" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
     </div>
-    
-    <script>
-        function toggleStatus(el) {{
-            el.classList.toggle('active');
-        }}
-        function toggleDM(el) {{
-            el.classList.toggle('active');
-        }}
-    </script>
     </body>
     </html>
-    '''
+    ''')
 
-# --- BLOCKED USERS LIST ---
 @app.route('/blocked')
 def blocked():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, int(session['user_id']))
-
-    return f'''
+    try:
+        user = db.session.get(User, int(session['user_id']))
+        if not user:
+            session.pop('user_id', None)
+            return redirect(url_for('login'))
+    except Exception:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+    
+    return render_template_string('''
     <!DOCTYPE html>
-    <html><head><title>Blocked Users</title>
+    <html>
+    <head><title>Blocked Users</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{padding:12px;max-width:100%;margin:auto;}
-        .header{{display:flex;align-items:center;gap:15px;margin-bottom:20px;}}
-        .back-btn{{color:#00bfff;text-decoration:none;font-size:24px;}}
-        h1{{margin:0;font-size:24px;}}
-        .blocked-item{{display:flex;align-items:center;justify-content:space-between;padding:15px;background:#1a2a3e;border-radius:12px;margin-bottom:10px;}}
-        .unblock-btn{{padding:8px 16px;background:#28a745;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;}}
-        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
-        .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
-        .nav-item:hover,.nav-item.active{{color:#00bfff;}}
-        .nav-icon{{font-size:24px;margin-bottom:4px;}}
+        * { box-sizing: border-box; }
+        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
+        .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
+        .card{background:#1a2a3e;padding:20px;border-radius:15px;margin-bottom:15px;}
+        h1{color:#00bfff;}
+        .blocked-user{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #334;}
+        .blocked-user:last-child{border-bottom:none;}
+        .unblock-btn{background:#ff5555;color:white;border:none;padding:5px 15px;border-radius:5px;cursor:pointer;}
+        .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;}
+        .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
+        .nav-item:hover,.nav-item.active{color:#00bfff;}
+        .nav-icon{font-size:24px;margin-bottom:4px;}
     </style>
     </head>
     <body>
     <div class="container">
-        <div class="header">
-            <a href="/settings" class="back-btn">⬅</a>
+        <div class="card">
             <h1>🚫 Blocked Users</h1>
+            <p style="color:#888;text-align:center;padding:20px;">You haven't blocked any users yet.</p>
         </div>
-        
-        <div class="blocked-item">
-            <span>No users blocked yet.</span>
-        </div>
-        
-        <div style="text-align:center;color:#888;font-size:13px;margin-top:20px;">
-            Blocked users cannot DM you, comment on your posts, or see your profile.
-        </div>
+        <a href="/settings" style="color:#00bfff;text-decoration:none;display:block;text-align:center;margin-top:10px;">⬅ Back to Settings</a>
     </div>
-    
     <div class="bottom-nav">
         <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
         <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
         <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏆</span>Leaderboard</a>
         <a href="/inbox" class="nav-item"><span class="nav-icon">📨</span>Inbox</a>
-        <a href="/profile/{user.username}" class="nav-item active"><span class="nav-icon">👤</span>Profile</a>
+        <a href="/profile/''' + user.username + '''" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
     </div>
     </body>
     </html>
-    '''
-
+    ''')
+ 
 # --- DELETE ROOM ---
 @app.route('/delete_room/<room_name>')
 def delete_room(room_name):
