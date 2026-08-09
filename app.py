@@ -922,7 +922,7 @@ def search():
 def dm_chat(receiver):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    sender = db.session.get(User, session.get('user_id')).username
+    sender = db.session.get(User, int(session['user_id'])).username
     room_name = '_'.join(sorted([sender, receiver]))
     return f"""
     <!DOCTYPE html>
