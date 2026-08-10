@@ -1155,34 +1155,24 @@ def profile(username):
     <style>
     * { box-sizing: border-box; }
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{padding:12px;max-width:100%;margin:auto;}
+    .container{padding:15px;width:100%;margin:auto;}
     
-    .card{background:#1a2a3e;padding:20px;border-radius:15px;margin-bottom:15px;}
+    .profile-card{background:#1a2a3e;padding:25px;border-radius:15px;width:100%;}
     .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
-    h1{text-align:center;font-size:24px;color:#00bfff;margin:10px 0;}
-    p{text-align:center;color:#ccc;font-size:14px;}
     
-    .btn{display:block;padding:14px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;}
+    .btn{display:block;padding:15px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;}
     .btn-mood{background:#ffc107;color:#111;}
     .btn-capsule{background:#6f42c1;}
     .btn-compliment{background:#28a745;}
     .btn-poll{background:#ffc107;color:#111;}
     
-    .btn-upload{background:#28a745;width:100%;padding:12px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;}
     .post-input{width:100%;padding:12px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:14px;margin:10px 0;resize:none;}
     .post-btn{background:#00bfff;color:white;border:none;border-radius:12px;padding:12px 24px;cursor:pointer;font-weight:bold;}
-    
-    .post-card{background:#1a2a3e;padding:15px;border-radius:15px;margin-bottom:15px;}
-    .post-header{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
-    .post-user{font-weight:bold;color:#00bfff;}
-    .post-time{font-size:11px;color:#666;}
-    .post-content{font-size:14px;color:#ddd;margin:5px 0;}
-    .post-image{width:100%;border-radius:10px;margin-top:10px;}
+    .btn-upload{background:#28a745;width:100%;padding:12px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;}
     
     .settings-gear{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;}
     .settings-gear:hover{color:#00bfff;transform:rotate(90deg);}
     
-    /* BOTTOM NAV BAR */
     .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
     .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
     .nav-item:hover,.nav-item.active{color:#00bfff;}
@@ -1191,10 +1181,10 @@ def profile(username):
     </head>
     <body>
     <div class="container">
-        <div class="card">
-            <!-- SETTINGS GEAR ICON -->
+        <div class="profile-card">
+        
+        <!-- SETTINGS GEAR ICON -->
             <a href="/settings" class="settings-gear">⚙️</a>
-            
             <img src="''' + user.profile_pic + '''" class="profile-img">
             <h1>''' + user.username + ' ' + get_flag(user.country) + '''</h1>
             <p style="color:#ccc;font-size:14px;">Level ''' + str(user.level) + ''' • ⭐ ''' + str(user.xp) + ''' XP • 💎 ''' + str(user.coins) + ''' Crystals</p>
@@ -1488,16 +1478,23 @@ def compose():
     <!DOCTYPE html>
     <html><head><title>Compose</title>
     <style>
-        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:20px;}
-        .container{max-width:100%;margin:auto;background:#1a2a3e;padding:30px;border-radius:20px;}
-        h1{color:#00bfff;}
-        input,textarea{width:100%;padding:10px;border-radius:8px;border:none;margin:10px 0;box-sizing:border-box;}
-        .btn{width:100%;padding:12px;background:#00bfff;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:16px;}
-        .btn-anon{background:#6f42c1;}
-        a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;text-align:center;}
-        label{display:flex;align-items:center;gap:10px;color:#ccc;font-size:14px;}
+    * { box-sizing: border-box; }
+    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
+    .container{padding:15px;width:100%;max-width:600px;margin:auto;}
+    .card{background:#1a2a3e;padding:25px;border-radius:15px;width:100%;}
+    h1{color:#00bfff;font-size:24px;margin-bottom:20px;}
+    input,textarea{width:100%;padding:14px;border-radius:10px;border:none;margin:10px 0;font-size:16px;box-sizing:border-box;}
+    textarea{resize:none;height:100px;font-family:Arial;}
+    label{display:flex;align-items:center;gap:10px;color:#ccc;font-size:14px;margin:10px 0;}
+    input[type="checkbox"]{width:auto;margin:0;}
+    .btn{width:100%;padding:14px;background:#00bfff;color:white;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;}
+    a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;text-align:center;}
+    .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
+    .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
+    .nav-item:hover,.nav-item.active{color:#00bfff;}
+    .nav-icon{font-size:24px;margin-bottom:4px;}
     </style>
-    </head>
+</head>
     <body>
     <div class="container">
         <h1>✉️ Compose Message</h1>
