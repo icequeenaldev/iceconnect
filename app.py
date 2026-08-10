@@ -1153,46 +1153,155 @@ def profile(username):
     <!DOCTYPE html>
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
-    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
+    * { box-sizing: border-box; }
+    body {
+        font-family: Arial;
+        background: #0b1a2e;
+        color: white;
+        margin: 0;
+        padding: 0 0 90px 0;
+        min-height: 100vh;
+    }
     .container {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 12px;
-    box-sizing: border-box;
-}
-    
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 12px;
+        box-sizing: border-box;
+        min-height: 80vh;
+    }
     .card {
-    background: #1a2a3e;
-    padding: 20px;
-    border-radius: 15px;
-    width: 100%;
-    box-sizing: border-box;
-}
-    .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
-    
-    .btn{display:block;padding:15px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;}
-    .btn-mood{background:#ffc107;color:#111;}
-    .btn-capsule{background:#6f42c1;}
-    .btn-compliment{background:#28a745;}
-    .btn-poll{background:#ffc107;color:#111;}
-    
-    .post-input{width:100%;padding:12px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:14px;margin:10px 0;resize:none;}
-    .post-btn{background:#00bfff;color:white;border:none;border-radius:12px;padding:12px 24px;cursor:pointer;font-weight:bold;}
-    .btn-upload{background:#28a745;width:100%;padding:12px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;}
-    
-    .settings-gear{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;}
-    .settings-gear:hover{color:#00bfff;transform:rotate(90deg);}
-    
-    .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
-    .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
-    .nav-item:hover,.nav-item.active{color:#00bfff;}
-    .nav-icon{font-size:24px;margin-bottom:4px;}
+        background: #1a2a3e;
+        padding: 20px;
+        border-radius: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .profile-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 5px solid #00bfff;
+        object-fit: cover;
+        display: block;
+        margin: 0 auto 15px auto;
+    }
+    .btn {
+        display: block;
+        padding: 12px;
+        background: #00bfff;
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        margin: 10px 0;
+        text-align: center;
+        font-weight: bold;
+        border: none;
+        width: 100%;
+        cursor: pointer;
+    }
+    .btn-mood { background: #ffc107; color: #111; }
+    .btn-capsule { background: #6f42c1; }
+    .btn-compliment { background: #28a745; }
+    .btn-poll { background: #ffc107; color: #111; }
+    .btn-upload {
+        background: #28a745;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 12px;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .post-input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: none;
+        background: #0b1a2e;
+        color: white;
+        font-size: 14px;
+        margin: 10px 0;
+        resize: none;
+        box-sizing: border-box;
+    }
+    .post-btn {
+        background: #00bfff;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+    }
+    .post-card {
+        background: #1a2a3e;
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+    .post-user {
+        font-weight: bold;
+        color: #00bfff;
+    }
+    .post-time {
+        font-size: 11px;
+        color: #666;
+    }
+    .post-content {
+        font-size: 14px;
+        color: #ddd;
+        margin: 5px 0;
+    }
+    .post-image {
+        width: 100%;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #0f1a2b;
+        display: flex;
+        justify-content: space-around;
+        padding: 12px 0 20px 0;
+        border-top: 1px solid #1a2a3e;
+        z-index: 999;
+    }
+    .nav-item {
+        color: #777;
+        text-decoration: none;
+        font-size: 11px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+    .nav-item:hover, .nav-item.active {
+        color: #00bfff;
+    }
+    .nav-icon {
+        font-size: 24px;
+        margin-bottom: 4px;
+    }
     </style>
     </head>
     <body>
     <div class="container">
-        <div class="profile-card">
+        <div class="card">
         
         <!-- SETTINGS GEAR ICON -->
             <a href="/settings" class="settings-gear">⚙️</a>
@@ -1496,6 +1605,7 @@ def compose():
         color: white;
         margin: 0;
         padding: 0 0 90px 0;
+        min-height: 100vh;
     }
     .container {
         width: 100%;
@@ -1503,6 +1613,7 @@ def compose():
         margin: 0 auto;
         padding: 12px;
         box-sizing: border-box;
+        min-height: 80vh;
     }
     .card {
         background: #1a2a3e;
@@ -1592,7 +1703,7 @@ def compose():
         font-size: 24px;
         margin-bottom: 4px;
     }
-   </style> 
+</style>
 </head>
     <body>
     <div class="container">
