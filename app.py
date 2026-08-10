@@ -748,8 +748,7 @@ def chatrooms():
     </html>
     '''
 
-# --- CHAT ROOM (FULL SCREEN, MESSAGES WORKING) ---
-# --- CHAT ROOM (FULL SCREEN, HIGHLIGHT, DELETE, REPORT) ---
+# --- CHAT ROOM (TIKTOK FULL-SCREEN, HIGHLIGHT, DELETE, REPORT) ---
 @app.route('/chat/<room_name>')
 def chat_room(room_name):
     if 'user_id' not in session:
@@ -774,22 +773,25 @@ def chat_room(room_name):
     <!DOCTYPE html>
     <html>
     <head><title>{title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
+        /* TIKTOK FULL-SCREEN LAYOUT */
         * {{ box-sizing: border-box; }}
-        body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{width:100%;max-width:100%;margin:auto;padding:12px;}}
-        #chat{{height:400px;width:100%;border:1px solid #00bfff;overflow-y:scroll;padding:10px;background:#1a2a3e;border-radius:10px;margin-bottom:10px;}}
-        .msg{{padding:10px;border-bottom:1px solid #334;cursor:pointer;position:relative;font-size:16px;display:flex;justify-content:space-between;align-items:center;}}
+        body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;}}
+        .container{{width:100%;height:100%;display:flex;flex-direction:column;padding:12px;box-sizing:border-box;}}
+        h1{{margin:0 0 10px 0;font-size:20px;color:#00bfff;}}
+        #chat{{flex:1;width:100%;border:1px solid #00bfff;overflow-y:auto;padding:10px;background:#1a2a3e;border-radius:10px;margin-bottom:10px;}}
+        .msg{{padding:10px;border-bottom:1px solid #334;cursor:pointer;position:relative;font-size:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}}
         .msg:hover{{background:#2a3a4e;}}
         .highlight{{background:#ffcc00 !important;color:#111;border-radius:5px;}}
         .user{{color:#00bfff;font-weight:bold;}}
         .reply-box{{background:#334;padding:8px;border-radius:5px;margin-bottom:10px;display:none;color:#ccc;font-size:14px;}}
-        .input-row{{display:flex;gap:8px;width:100%;align-items:center;}}
-        input{{flex:1;padding:14px;border-radius:8px;border:none;font-size:16px;background:#1a2a3e;color:white;}}
-        .btn{{padding:14px 20px;background:#00bfff;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:16px;}}
-        .icon-btn{{padding:14px;border-radius:8px;cursor:pointer;border:none;font-size:20px;}}
-        a{{color:#00bfff;text-decoration:none;display:block;margin-top:20px;}}
+        .input-row{{display:flex;gap:8px;width:100%;align-items:center;padding:5px 0;background:#0b1a2e;}}
+        input{{flex:1;padding:14px;border-radius:8px;border:none;font-size:16px;background:#1a2a3e;color:white;width:100%;}}
+        .btn{{padding:14px 18px;background:#00bfff;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:16px;white-space:nowrap;}}
+        .icon-btn{{padding:14px;border-radius:8px;cursor:pointer;border:none;font-size:20px;white-space:nowrap;}}
+        a{{color:#00bfff;text-decoration:none;display:block;padding:10px 0;text-align:center;}}
         .action-btn{{background:none;border:none;font-size:14px;cursor:pointer;padding:0 5px;}}
         .delete-btn{{color:#ff5555;}}
         .report-btn{{color:#ff5555;}}
@@ -966,6 +968,10 @@ def chat_room(room_name):
     </html>
     """
         
+                
+
+        
+    
         
 
 # --- LOGIN PAGE (Full Screen, Centered, Beautiful) ---
