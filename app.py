@@ -1153,9 +1153,8 @@ def profile(username):
     <!DOCTYPE html>
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
-    * { box-sizing: border-box; }
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{padding:15px;width:100%;margin:auto;}
+    .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
     
     .profile-card{background:#1a2a3e;padding:25px;border-radius:15px;width:100%;}
     .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
@@ -1478,9 +1477,8 @@ def compose():
     <!DOCTYPE html>
     <html><head><title>Compose</title>
     <style>
-    * { box-sizing: border-box; }
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{padding:15px;width:100%;max-width:600px;margin:auto;}
+    .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
     .card{background:#1a2a3e;padding:25px;border-radius:15px;width:100%;}
     h1{color:#00bfff;font-size:24px;margin-bottom:20px;}
     input,textarea{width:100%;padding:14px;border-radius:10px;border:none;margin:10px 0;font-size:16px;box-sizing:border-box;}
