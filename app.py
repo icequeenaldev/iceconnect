@@ -1154,10 +1154,12 @@ def profile(username):
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{padding:15px;width:100%;max-width:600px;margin:auto;box-sizing:border-box;}
+    .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
+
     
     /* Profile Card */
-    .card{background:#1a2a3e;padding:30px;border-radius:20px;position:relative;}
+    .card{background:#1a2a3e;padding:30px;border-radius:20px;width:100%;box-sizing:border-box;}
+
     
     /* Settings Gear Icon */
     .settings-gear{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;}
