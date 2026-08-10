@@ -747,6 +747,155 @@ def chatrooms():
     </body>
     </html>
     '''
+# --- CHAT ROOMS (WITH CAMERA ICON RESTORED) ---
+@app.route('/chat/<room_name>')
+def chat_room(room_name):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user = db.session.get(User, session.get('user_id'))
+    if room_name == 'youth' and user.age > 25:
+        return "<h1>⛔ Access Denied</h1><p>Youth Hub is strictly for ages 16-25.</p>"
+    if room_name == 'premier' and user.age < 26:
+        return "<h1>⛔ Access Denied</h1><p>Premier Lounge is for ages 26 and above.</p>"
+    room_titles = {'global':'🌍 Global Lounge', 'youth':'🧑‍🤝‍🧑 Youth Hub', 'premier':'👑 Premier Lounge', 'gaming':'🎮 Gamers Hub', 'music':'🎵 Music & Vibes', 'study':'📚 Study Squad'}
+    title = room_titles.get(room_name, '🌍 Room')
+    return f"""
+    <!DOCTYPE html>
+    <html><head><title>{title}</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        * {{ box-sizing: border-box; }}
+        body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
+        .container{{width:100%;max-width:600px;margin:auto;padding:12px;}}
+        #chat{{height:350px;border:1px solid #00bfff;overflow-y:scroll;padding:10px;background:#1a2a3e;border-radius:10px;margin-bottom:10px;}}
+        .msg{{padding:8px;border-bottom:1px solid #334;color:white;}}
+        .user{{color:#00bfff;font-weight:bold;}}
+        .input-row{{display:flex;gap:5px;width:100%;align-items:center;}}
+        input{{flex:1;padding:12px;border-radius:5px;border:none;font-size:16px;}}
+        button{{padding:10px 15px;background:#00bfff;color:white;border:none;border-radius:5px;cursor:pointer;}}
+        .icon-btn{{padding:10px;border-radius:5px;cursor:pointer;border:none;font-size:20px;}}
+        a{{color:#00bfff;text-decoration:none;display:block;margin-top:20px;}}
+    </style>
+    </head>
+    <body>
+    <div class="container">
+        <h1>{title}</h1>
+        <div id="chat"></div>
+        <div class="input-row">
+            <input id="msg" placeholder="Type a message...">
+            <button onclick="sendMsg()">Send</button>
+            <button id="voice-btn" class="icon-btn" style="background:#6f42c1;" onmousedown="startRecording()" onmouseup="stopRecording()" onmouseleave="stopRecording()">🎤</button>
+            <button id="camera-btn" class="icon-btn" style="background:#28a745;" onclick="document.getElementById('image-input').click()">📷</button>
+        </div>
+        <!-- Hidden file input for posting images -->
+        <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="uploadImage(this)">
+        <a href="/">⬅ Back to Rooms</a>
+    </div>
+    <script>
+        var socket = io();
+        var username = "{user.username}";
+        var room = "{room_name}";
+        var mediaRecorder;
+        var audioChunks = [];
+        var isRecording = false;
+
+        async function startRecording() {{
+            try {{
+                const stream = await navigator.mediaDevices.getUserMedia({{ audio: true }});
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                isRecording = true;
+                document.getElementById('voice-btn').innerText = '🔴';
+                mediaRecorder.addEventListener('dataavailable', event => {{
+                    audioChunks.push(event.data);
+                }});
+                mediaRecorder.addEventListener('stop', () => {{
+                    const audioBlob = new Blob(audioChunks, {{ type: 'audio/wav' }});
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = function() {{
+                        socket.emit('send_voice', {{room: room, audio: reader.result}});
+                    }};
+                    audioChunks = [];
+                }});
+            }} catch (err) {{
+                alert('Please allow microphone access.');
+            }}
+        }}
+        function stopRecording() {{
+            if(isRecording && mediaRecorder) {{
+                mediaRecorder.stop();
+                isRecording = false;
+                document.getElementById('voice-btn').innerText = '🎤';
+            }}
+        }}
+
+        function uploadImage(input) {{
+            if (input.files && input.files[0]) {{
+                var reader = new FileReader();
+                reader.onload = function(e) {{
+                    socket.emit('send_image', {{room: room, image: e.target.result}});
+                }};
+                reader.readAsDataURL(input.files[0]);
+                input.value = '';
+            }}
+        }}
+
+        socket.on('connect', function() {{
+            socket.emit('join_room', {{username: username, room: room}});
+        }});
+        socket.on('load_history', function(messages) {{
+            var chat = document.getElementById('chat');
+            messages.forEach(function(m) {{
+                addMessage(m[0], m[1]);
+            }});
+            chat.scrollTop = chat.scrollHeight;
+        }});
+        socket.on('message', function(data) {{
+            addMessage(data[0], data[1]);
+        }});
+        socket.on('voice_message', function(data) {{
+            var chat = document.getElementById('chat');
+            var newMsg = document.createElement('div');
+            newMsg.className = 'msg';
+            newMsg.innerHTML = '<span class="user">' + data[0] + ':</span> 🎵 <audio controls src="' + data[1] + '"></audio>';
+            chat.appendChild(newMsg);
+            chat.scrollTop = chat.scrollHeight;
+        }});
+        socket.on('image_message', function(data) {{
+            var chat = document.getElementById('chat');
+            var newMsg = document.createElement('div');
+            newMsg.className = 'msg';
+            newMsg.innerHTML = '<span class="user">' + data[0] + ':</span> 📷 <img src="' + data[1] + '" style="max-width:200px;border-radius:10px;margin-top:5px;">';
+            chat.appendChild(newMsg);
+            chat.scrollTop = chat.scrollHeight;
+        }});
+
+        function addMessage(user, content) {{
+            var chat = document.getElementById('chat');
+            var newMsg = document.createElement('div');
+            newMsg.className = 'msg';
+            newMsg.innerHTML = '<span class="user">' + user + ':</span> ' + content;
+            chat.appendChild(newMsg);
+            chat.scrollTop = chat.scrollHeight;
+        }}
+
+        function sendMsg() {{
+            var msg = document.getElementById('msg').value;
+            if(msg.trim() !== '') {{
+                socket.emit('send_message', {{msg: msg, room: room, username: username}});
+                document.getElementById('msg').value = '';
+            }}
+        }}
+
+        document.getElementById('msg').addEventListener('keypress', function (e) {{
+            if (e.key === 'Enter') sendMsg();
+        }});
+    </script>
+    </body>
+    </html>
+    """
+
 # --- LOGIN PAGE (Full Screen, Centered, Beautiful) ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1168,7 +1317,7 @@ def profile(username):
         .post-image{width:100%;border-radius:10px;margin-top:10px;}
         
         /* GEAR ICON AT TOP LEFT */
-        .settings-gear{position:absolute;top:15px;left:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;z-index:10;}
+        .settings-gear{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;z-index:10;}
         .settings-gear:hover{color:#00bfff;transform:rotate(90deg);}
         
         /* BOTTOM NAV BAR */
@@ -1286,7 +1435,6 @@ def handle_delete(data):
         db.session.commit()
     emit('message_deleted', data['msg_id'], room=data['room'])
 
-# --- COMPOSE PAGE (Send DM or Anonymous Compliment) ---
 # --- COMPOSE PAGE (FINAL FULL-SCREEN VERSION) ---
 @app.route('/compose', methods=['GET', 'POST'])
 def compose():
