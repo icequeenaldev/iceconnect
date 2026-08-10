@@ -747,7 +747,8 @@ def chatrooms():
     </body>
     </html>
     '''
-# --- CHAT ROOMS (WITH CAMERA ICON RESTORED) ---
+
+# --- CHAT ROOM (FULL SCREEN, MESSAGES WORKING) ---
 @app.route('/chat/<room_name>')
 def chat_room(room_name):
     if 'user_id' not in session:
@@ -757,37 +758,52 @@ def chat_room(room_name):
         return "<h1>⛔ Access Denied</h1><p>Youth Hub is strictly for ages 16-25.</p>"
     if room_name == 'premier' and user.age < 26:
         return "<h1>⛔ Access Denied</h1><p>Premier Lounge is for ages 26 and above.</p>"
-    room_titles = {'global':'🌍 Global Lounge', 'youth':'🧑‍🤝‍🧑 Youth Hub', 'premier':'👑 Premier Lounge', 'gaming':'🎮 Gamers Hub', 'music':'🎵 Music & Vibes', 'study':'📚 Study Squad'}
+    
+    room_titles = {
+        'global':'🌍 Global Lounge', 
+        'youth':'🧑‍🤝‍🧑 Youth Hub', 
+        'premier':'👑 Premier Lounge', 
+        'gaming':'🎮 Gamers Hub', 
+        'music':'🎵 Music & Vibes', 
+        'study':'📚 Study Squad'
+    }
     title = room_titles.get(room_name, '🌍 Room')
+    
+    # Load past messages from database
+    past_messages = Message.query.filter_by(room=room_name).order_by(Message.timestamp).all()
+    history_html = "".join([f'<div class="msg"><span class="user">{m.username}:</span> {m.content}</div>' for m in past_messages])
+    
     return f"""
     <!DOCTYPE html>
-    <html><head><title>{title}</title>
+    <html>
+    <head><title>{title}</title>
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
         * {{ box-sizing: border-box; }}
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
-        .container{{width:100%;max-width:600px;margin:auto;padding:12px;}}
-        #chat{{height:350px;border:1px solid #00bfff;overflow-y:scroll;padding:10px;background:#1a2a3e;border-radius:10px;margin-bottom:10px;}}
-        .msg{{padding:8px;border-bottom:1px solid #334;color:white;}}
+        .container{{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}}
+        #chat{{height:400px;border:1px solid #00bfff;overflow-y:scroll;padding:10px;background:#1a2a3e;border-radius:10px;margin-bottom:10px;width:100%;}}
+        .msg{{padding:8px;border-bottom:1px solid #334;color:white;font-size:16px;}}
         .user{{color:#00bfff;font-weight:bold;}}
-        .input-row{{display:flex;gap:5px;width:100%;align-items:center;}}
-        input{{flex:1;padding:12px;border-radius:5px;border:none;font-size:16px;}}
-        button{{padding:10px 15px;background:#00bfff;color:white;border:none;border-radius:5px;cursor:pointer;}}
-        .icon-btn{{padding:10px;border-radius:5px;cursor:pointer;border:none;font-size:20px;}}
+        .input-row{{display:flex;gap:8px;width:100%;align-items:center;}}
+        input{{flex:1;padding:14px;border-radius:8px;border:none;font-size:16px;background:#1a2a3e;color:white;}}
+        .btn{{padding:14px 20px;background:#00bfff;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:16px;}}
+        .icon-btn{{padding:14px;border-radius:8px;cursor:pointer;border:none;font-size:20px;}}
         a{{color:#00bfff;text-decoration:none;display:block;margin-top:20px;}}
     </style>
     </head>
     <body>
     <div class="container">
         <h1>{title}</h1>
-        <div id="chat"></div>
+        <div id="chat">
+            {history_html}
+        </div>
         <div class="input-row">
             <input id="msg" placeholder="Type a message...">
-            <button onclick="sendMsg()">Send</button>
+            <button class="btn" onclick="sendMsg()">Send</button>
             <button id="voice-btn" class="icon-btn" style="background:#6f42c1;" onmousedown="startRecording()" onmouseup="stopRecording()" onmouseleave="stopRecording()">🎤</button>
             <button id="camera-btn" class="icon-btn" style="background:#28a745;" onclick="document.getElementById('image-input').click()">📷</button>
         </div>
-        <!-- Hidden file input for posting images -->
         <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="uploadImage(this)">
         <a href="/">⬅ Back to Rooms</a>
     </div>
@@ -844,16 +860,20 @@ def chat_room(room_name):
         socket.on('connect', function() {{
             socket.emit('join_room', {{username: username, room: room}});
         }});
+
         socket.on('load_history', function(messages) {{
             var chat = document.getElementById('chat');
+            chat.innerHTML = '';
             messages.forEach(function(m) {{
                 addMessage(m[0], m[1]);
             }});
             chat.scrollTop = chat.scrollHeight;
         }});
+
         socket.on('message', function(data) {{
             addMessage(data[0], data[1]);
         }});
+
         socket.on('voice_message', function(data) {{
             var chat = document.getElementById('chat');
             var newMsg = document.createElement('div');
@@ -862,6 +882,7 @@ def chat_room(room_name):
             chat.appendChild(newMsg);
             chat.scrollTop = chat.scrollHeight;
         }});
+
         socket.on('image_message', function(data) {{
             var chat = document.getElementById('chat');
             var newMsg = document.createElement('div');
@@ -884,6 +905,7 @@ def chat_room(room_name):
             var msg = document.getElementById('msg').value;
             if(msg.trim() !== '') {{
                 socket.emit('send_message', {{msg: msg, room: room, username: username}});
+                addMessage(username, msg); // <--- THIS MAKES IT SHOW INSTANTLY
                 document.getElementById('msg').value = '';
             }}
         }}
@@ -894,7 +916,8 @@ def chat_room(room_name):
     </script>
     </body>
     </html>
-    """
+    """        
+        
 
 # --- LOGIN PAGE (Full Screen, Centered, Beautiful) ---
 @app.route('/login', methods=['GET', 'POST'])
