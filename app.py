@@ -1154,9 +1154,21 @@ def profile(username):
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
     body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
+    .container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 12px;
+    box-sizing: border-box;
+}
     
-    .profile-card{background:#1a2a3e;padding:25px;border-radius:15px;width:100%;}
+    .card {
+    background: #1a2a3e;
+    padding: 20px;
+    border-radius: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
     .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
     
     .btn{display:block;padding:15px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;}
@@ -1477,25 +1489,115 @@ def compose():
     <!DOCTYPE html>
     <html><head><title>Compose</title>
     <style>
-    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-    .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
-    .card{background:#1a2a3e;padding:25px;border-radius:15px;width:100%;}
-    h1{color:#00bfff;font-size:24px;margin-bottom:20px;}
-    input,textarea{width:100%;padding:14px;border-radius:10px;border:none;margin:10px 0;font-size:16px;box-sizing:border-box;}
-    textarea{resize:none;height:100px;font-family:Arial;}
-    label{display:flex;align-items:center;gap:10px;color:#ccc;font-size:14px;margin:10px 0;}
-    input[type="checkbox"]{width:auto;margin:0;}
-    .btn{width:100%;padding:14px;background:#00bfff;color:white;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;}
-    a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;text-align:center;}
-    .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
-    .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
-    .nav-item:hover,.nav-item.active{color:#00bfff;}
-    .nav-icon{font-size:24px;margin-bottom:4px;}
-    </style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: Arial;
+        background: #0b1a2e;
+        color: white;
+        margin: 0;
+        padding: 0 0 90px 0;
+    }
+    .container {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 12px;
+        box-sizing: border-box;
+    }
+    .card {
+        background: #1a2a3e;
+        padding: 20px;
+        border-radius: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    h1 {
+        color: #00bfff;
+        font-size: 24px;
+        margin: 0 0 15px 0;
+    }
+    input, textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        margin: 8px 0;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+    textarea {
+        resize: none;
+        height: 100px;
+    }
+    label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ccc;
+        font-size: 14px;
+        margin: 10px 0;
+    }
+    input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+    }
+    .btn {
+        width: 100%;
+        padding: 14px;
+        background: #00bfff;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .btn:hover {
+        opacity: 0.8;
+    }
+    a {
+        color: #00bfff;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+    }
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #0f1a2b;
+        display: flex;
+        justify-content: space-around;
+        padding: 12px 0 20px 0;
+        border-top: 1px solid #1a2a3e;
+        z-index: 999;
+    }
+    .nav-item {
+        color: #777;
+        text-decoration: none;
+        font-size: 11px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+    .nav-item:hover, .nav-item.active {
+        color: #00bfff;
+    }
+    .nav-icon {
+        font-size: 24px;
+        margin-bottom: 4px;
+    }
+   </style> 
 </head>
     <body>
     <div class="container">
-        <h1>✉️ Compose Message</h1>
+    <div class="card">
+        <h1>📨 Compose Message</h1>
         <form method="POST">
             <input type="text" name="recipient" placeholder="Enter recipient's username" required>
             <textarea name="message" placeholder="Write your message..." rows="3" required></textarea>
@@ -1507,6 +1609,7 @@ def compose():
         </form>
         <a href="/inbox">⬅ Back to Inbox</a>
     </div>
+</div>
     </body>
     </html>
     '''
