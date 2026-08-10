@@ -5,3 +5,4 @@ gunicorn
 gevent
 eventlet
 gevent-websocket
+psycopg2-binary
