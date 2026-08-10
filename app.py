@@ -1153,37 +1153,40 @@ def profile(username):
     <!DOCTYPE html>
     <html><head><title>''' + user.username + ''''s Profile</title>
     <style>
-    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 100px 0;font-size:16px;}
-    .container{padding:15px;width:100%;max-width:600px;margin:auto;box-sizing:border-box;}
-    .card{background:#1a2a3e;padding:30px 20px;border-radius:20px;width:100%;box-sizing:border-box;}
-    .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
+    * { box-sizing: border-box; }
+    body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
+    .container{padding:12px;max-width:100%;margin:auto;}
     
-    .btn{display:block;padding:18px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:12px 0;text-align:center;font-weight:bold;font-size:18px;}
+    .card{background:#1a2a3e;padding:20px;border-radius:15px;margin-bottom:15px;}
+    .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
+    h1{text-align:center;font-size:24px;color:#00bfff;margin:10px 0;}
+    p{text-align:center;color:#ccc;font-size:14px;}
+    
+    .btn{display:block;padding:14px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;}
     .btn-mood{background:#ffc107;color:#111;}
     .btn-capsule{background:#6f42c1;}
     .btn-compliment{background:#28a745;}
     .btn-poll{background:#ffc107;color:#111;}
     
-    .btn-upload{background:#28a745;width:100%;padding:14px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;font-size:16px;}
-    
-    .post-input{width:100%;padding:14px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:16px;margin:10px 0;resize:none;}
-    .post-btn{background:#00bfff;color:white;border:none;border-radius:12px;padding:14px 24px;cursor:pointer;font-weight:bold;font-size:16px;}
+    .btn-upload{background:#28a745;width:100%;padding:12px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;}
+    .post-input{width:100%;padding:12px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:14px;margin:10px 0;resize:none;}
+    .post-btn{background:#00bfff;color:white;border:none;border-radius:12px;padding:12px 24px;cursor:pointer;font-weight:bold;}
     
     .post-card{background:#1a2a3e;padding:15px;border-radius:15px;margin-bottom:15px;}
     .post-header{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
-    .post-user{font-weight:bold;color:#00bfff;font-size:16px;}
-    .post-time{font-size:12px;color:#666;}
-    .post-content{font-size:15px;color:#ddd;margin:5px 0;}
+    .post-user{font-weight:bold;color:#00bfff;}
+    .post-time{font-size:11px;color:#666;}
+    .post-content{font-size:14px;color:#ddd;margin:5px 0;}
     .post-image{width:100%;border-radius:10px;margin-top:10px;}
     
-    .settings-gear{position:absolute;top:15px;right:15px;font-size:26px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;}
+    .settings-gear{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;}
     .settings-gear:hover{color:#00bfff;transform:rotate(90deg);}
     
-    /* BOTTOM NAVIGATION BAR - MADE THICKER AND BIGGER */
-    .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:15px 0 25px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
-    .nav-item{color:#777;text-decoration:none;font-size:14px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
+    /* BOTTOM NAV BAR */
+    .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
+    .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
     .nav-item:hover,.nav-item.active{color:#00bfff;}
-    .nav-icon{font-size:30px;margin-bottom:6px;}
+    .nav-icon{font-size:24px;margin-bottom:4px;}
     </style>
     </head>
     <body>
