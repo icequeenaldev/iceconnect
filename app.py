@@ -1104,17 +1104,9 @@ def vote(poll_id, choice):
 def profile(username):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
     user = User.query.filter_by(username=username).first()
-    
-    # 🔥 ADD THIS CHECK 🔥
     if not user:
-        return "User not found", 404
-    
-    session_user = db.session.get(User, int(session['user_id']))
-    if not session_user:
-        session.pop('user_id', None)
-        return redirect(url_for('login'))
+        return "User not found!"
     
     if request.method == 'POST':
         if 'post_image' in request.files or 'post_caption' in request.form:
@@ -1152,164 +1144,50 @@ def profile(username):
     return '''
     <!DOCTYPE html>
     <html><head><title>''' + user.username + ''''s Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-    * { box-sizing: border-box; }
-    body {
-        font-family: Arial;
-        background: #0b1a2e;
-        color: white;
-        margin: 0;
-        padding: 0 0 90px 0;
-        min-height: 100vh;
-    }
-    .container {
-        width: 100%;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 12px;
-        box-sizing: border-box;
-        min-height: 80vh;
-    }
-    .card {
-        background: #1a2a3e;
-        padding: 20px;
-        border-radius: 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .profile-img {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        border: 5px solid #00bfff;
-        object-fit: cover;
-        display: block;
-        margin: 0 auto 15px auto;
-    }
-    .btn {
-        display: block;
-        padding: 12px;
-        background: #00bfff;
-        color: white;
-        text-decoration: none;
-        border-radius: 12px;
-        margin: 10px 0;
-        text-align: center;
-        font-weight: bold;
-        border: none;
-        width: 100%;
-        cursor: pointer;
-    }
-    .btn-mood { background: #ffc107; color: #111; }
-    .btn-capsule { background: #6f42c1; }
-    .btn-compliment { background: #28a745; }
-    .btn-poll { background: #ffc107; color: #111; }
-    .btn-upload {
-        background: #28a745;
-        width: 100%;
-        padding: 12px;
-        border: none;
-        border-radius: 12px;
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .post-input {
-        width: 100%;
-        padding: 12px;
-        border-radius: 12px;
-        border: none;
-        background: #0b1a2e;
-        color: white;
-        font-size: 14px;
-        margin: 10px 0;
-        resize: none;
-        box-sizing: border-box;
-    }
-    .post-btn {
-        background: #00bfff;
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 12px 24px;
-        cursor: pointer;
-        font-weight: bold;
-        width: 100%;
-    }
-    .post-card {
-        background: #1a2a3e;
-        padding: 15px;
-        border-radius: 15px;
-        margin-bottom: 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .post-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 5px;
-    }
-    .post-user {
-        font-weight: bold;
-        color: #00bfff;
-    }
-    .post-time {
-        font-size: 11px;
-        color: #666;
-    }
-    .post-content {
-        font-size: 14px;
-        color: #ddd;
-        margin: 5px 0;
-    }
-    .post-image {
-        width: 100%;
-        border-radius: 10px;
-        margin-top: 10px;
-    }
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: #0f1a2b;
-        display: flex;
-        justify-content: space-around;
-        padding: 12px 0 20px 0;
-        border-top: 1px solid #1a2a3e;
-        z-index: 999;
-    }
-    .nav-item {
-        color: #777;
-        text-decoration: none;
-        font-size: 11px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-    }
-    .nav-item:hover, .nav-item.active {
-        color: #00bfff;
-    }
-    .nav-icon {
-        font-size: 24px;
-        margin-bottom: 4px;
-    }
+        * { box-sizing: border-box; }
+        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
+        .container{width:100%;max-width:600px;margin:auto;padding:12px;}
+        .profile-card{background:#1a2a3e;padding:20px;border-radius:15px;width:100%;position:relative;}
+        .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
+        h1{text-align:center;color:#00bfff;font-size:24px;margin:10px 0;}
+        .btn{display:block;padding:14px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;font-size:16px;}
+        .btn-mood{background:#ffc107;color:#111;}
+        .btn-capsule{background:#6f42c1;}
+        .btn-compliment{background:#28a745;}
+        .btn-poll{background:#ffc107;color:#111;}
+        .post-input{width:100%;padding:12px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:14px;margin:10px 0;resize:none;}
+        .post-btn{background:#00bfff;color:white;border:none;border-radius:12px;padding:12px 24px;cursor:pointer;font-weight:bold;}
+        .btn-upload{background:#28a745;width:100%;padding:12px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;}
+        .post-card{background:#1a2a3e;padding:15px;border-radius:15px;margin-bottom:15px;}
+        .post-header{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
+        .post-user{font-weight:bold;color:#00bfff;}
+        .post-time{font-size:11px;color:#666;}
+        .post-content{font-size:14px;color:#ddd;margin:5px 0;}
+        .post-image{width:100%;border-radius:10px;margin-top:10px;}
+        
+        /* GEAR ICON AT TOP LEFT */
+        .settings-gear{position:absolute;top:15px;left:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;z-index:10;}
+        .settings-gear:hover{color:#00bfff;transform:rotate(90deg);}
+        
+        /* BOTTOM NAV BAR */
+        .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
+        .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
+        .nav-item:hover,.nav-item.active{color:#00bfff;}
+        .nav-icon{font-size:24px;margin-bottom:4px;}
     </style>
     </head>
     <body>
     <div class="container">
-        <div class="card">
-        
-        <!-- SETTINGS GEAR ICON -->
+        <div class="profile-card">
+            <!-- SETTINGS GEAR ICON AT TOP LEFT -->
             <a href="/settings" class="settings-gear">⚙️</a>
+            
             <img src="''' + user.profile_pic + '''" class="profile-img">
             <h1>''' + user.username + ' ' + get_flag(user.country) + '''</h1>
-            <p style="color:#ccc;font-size:14px;">Level ''' + str(user.level) + ''' • ⭐ ''' + str(user.xp) + ''' XP • 💎 ''' + str(user.coins) + ''' Crystals</p>
+            <p style="text-align:center;color:#ccc;font-size:14px;">Level ''' + str(user.level) + ''' • ⭐ ''' + str(user.xp) + ''' XP • 💎 ''' + str(user.coins) + ''' Crystals</p>
             <hr style="border-color:#334;">
-            
             <a href="/mood" class="btn btn-mood">🎨 Change Mood Aura</a>
             <a href="/capsule" class="btn btn-capsule">📜 Bury a Time Capsule</a>
             <a href="/compliment" class="btn btn-compliment">💖 Send Anonymous Compliment</a>
@@ -1335,7 +1213,6 @@ def profile(username):
             ''' + (post_html if post_html else '<p style="color:#666;text-align:center;">You haven\'t posted anything yet.</p>') + '''
         </div>
     </div>
-    
     <div class="bottom-nav">
         <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
         <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
@@ -1345,167 +1222,8 @@ def profile(username):
     </div>
     </body>
     </html>
-    '''
-
-# --- CHAT ROOMS (With History, Highlight & Delete) ---
-@app.route('/chat/<room_name>')
-def chat_room(room_name):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    user = db.session.get(User, int(session['user_id']))
-
-    if room_name == 'youth' and user.age > 25:
-        return "<h1>⛔ Access Denied</h1><p>Youth Hub is strictly for ages 16-25.</p>"
-    if room_name == 'premier' and user.age < 26:
-        return "<h1>⛔ Access Denied</h1><p>Premier Lounge is for ages 26 and above.</p>"
-    
-    room_titles = {'global':'🌍 Global Lounge', 'youth':'🧑‍🤝‍🧑 Youth Hub', 'premier':'👑 Premier Lounge', 'gaming':'🎮 Gamers Hub', 'music':'🎵 Music & Vibes', 'study':'📚 Study Squad'}
-    title = room_titles.get(room_name, '🌍 Room')
-    
-    # Load history from database
-    past_messages = Message.query.filter_by(room=room_name).order_by(Message.timestamp.desc()).limit(30).all()[::-1]
-    history_html = "".join([f'<div class="msg" id="msg-{m.id}"><span class="user">{m.username}:</span> {m.content}</div>' for m in past_messages])
-    
-    return f"""
-    <!DOCTYPE html>
-    <html><head><title>{title}</title>
-    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
-    <style>
-        body{{background:#0b1a2e;color:white;font-family:Arial;padding:20px;}}
-        #chat{{height:300px;border:1px solid #00bfff;overflow-y:scroll;padding:10px;background:#1a2a3e;border-radius:10px;margin-bottom:10px;}}
-        .msg{{padding:8px;border-bottom:1px solid #334;cursor:pointer;}}
-        .msg:hover{{background:#2a3a4e;}}
-        .highlight{{background:#ffcc00 !important;color:#111;}}
-        .user{{color:#00bfff;font-weight:bold;}}
-        .reply-box{{background:#334;padding:8px;border-radius:5px;margin-bottom:10px;display:none;color:#ccc;}}
-        input{{padding:10px;width:60%;border-radius:5px;border:none;}}
-        button{{padding:10px;background:#00bfff;color:white;border:none;border-radius:5px;cursor:pointer;}}
-        a{{color:#00bfff;text-decoration:none;display:block;margin-top:20px;}}
-        .report-btn{{color:#ff5555;text-decoration:none;font-size:12px;float:right;margin-top:5px;cursor:pointer;}}
-        .delete-btn{{color:#ff5555;text-decoration:none;font-size:12px;float:right;margin-top:5px;cursor:pointer;margin-right:10px;}}
-        #voice-btn{{padding:10px;background:#6f42c1;color:white;border:none;border-radius:8px;cursor:pointer;margin:5px;}}
-        #voice-btn:active{{background:#ff5555;}}
-    </style>
-    </head>
-    <body>
-    <h1>{title} <span class="online-dot"></span> Online</h1>
-    <div id="reply-box" class="reply-box">Replying to: <span id="reply-target"></span></div>
-    <div id="chat">
-        {history_html}
-    </div>
-    <input id="msg" placeholder="Type a message...">
-    <button onclick="sendMsg()">Send</button>
-    <button id="voice-btn" onmousedown="startRecording()" onmouseup="stopRecording()">🎤 Hold to Record</button>
-    <a href="/">⬅ Back to Rooms</a>
-    <script>
-        var socket = io();
-        var username = "{user.username}";
-        var room = "{room_name}";
-        var replyToId = null;
-        var mediaRecorder;
-        var audioChunks = [];
-        var isRecording = false;
-
-        async function startRecording() {{
-            try {{
-                const stream = await navigator.mediaDevices.getUserMedia({{ audio: true }});
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.start();
-                isRecording = true;
-                document.getElementById('voice-btn').innerText = '🔴 Recording...';
-                mediaRecorder.addEventListener('dataavailable', event => {{
-                    audioChunks.push(event.data);
-                }});
-                mediaRecorder.addEventListener('stop', () => {{
-                    const audioBlob = new Blob(audioChunks, {{ type: 'audio/wav' }});
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob);
-                    reader.onloadend = function() {{
-                        socket.emit('send_voice', {{room: room, audio: reader.result}});
-                    }};
-                    audioChunks = [];
-                }});
-            }} catch (err) {{
-                alert('Allow microphone access.');
-            }}
-        }}
-        function stopRecording() {{
-            if(isRecording && mediaRecorder) {{
-                mediaRecorder.stop();
-                isRecording = false;
-                document.getElementById('voice-btn').innerText = '🎤 Hold to Record';
-            }}
-        }}
-
-        socket.on('connect', function() {{
-            socket.emit('join_room', {{username: username, country: "{user.country}", room: room}});
-        }});
-        socket.on('message', function(data) {{
-            addMessage(data[0], data[1], data[2]);
-        }});
-
-        function addMessage(user, content, msgId) {{
-            var chat = document.getElementById('chat');
-            var newMsg = document.createElement('div');
-            newMsg.className = 'msg';
-            newMsg.id = 'msg-' + msgId;
-            var reportBtn = '';
-            var deleteBtn = '';
-            if(user !== 'System') {{
-                reportBtn = ' <a href="#" class="report-btn" onclick="alert(\\'Report sent to IceQueenAL.\\'); return false;">🚩 Report</a>';
-                if(user === username) {{
-                    deleteBtn = ' <a href="#" class="delete-btn" onclick="deleteMessage(\\'' + msgId + '\\'); return false;">🗑️</a>';
-                }}
-            }}
-            newMsg.innerHTML = '<span class="user">' + user + ':</span> ' + content + reportBtn + deleteBtn;
-            
-            // Highlight / Unhighlight (Double Tap)
-            var lastTap = 0;
-            newMsg.onclick = function(e) {{
-                if(e.target.tagName.toLowerCase() === 'a') return;
-                var currentTime = new Date().getTime();
-                var tapLength = currentTime - lastTap;
-                if (tapLength < 300 && tapLength > 0) {{
-                    this.classList.remove('highlight');
-                    replyToId = null;
-                    document.getElementById('reply-box').style.display = 'none';
-                }} else {{
-                    document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
-                    this.classList.add('highlight');
-                    replyToId = msgId;
-                    document.getElementById('reply-box').style.display = 'block';
-                    document.getElementById('reply-target').innerText = user + ': ' + content.substring(0,20) + '...';
-                }}
-                lastTap = currentTime;
-            }};
-            chat.appendChild(newMsg);
-            chat.scrollTop = chat.scrollHeight;
-        }}
-
-        function deleteMessage(msgId) {{
-            if(confirm('Delete this message?')) {{
-                socket.emit('delete_message', {{msg_id: msgId, room: room}});
-                document.getElementById('msg-' + msgId).remove();
-            }}
-        }}
-
-        function sendMsg() {{
-            var msg = document.getElementById('msg').value;
-            if(msg.trim() !== '') {{
-                socket.emit('send_message', {{msg: msg, room: room, reply_id: replyToId}});
-                document.getElementById('msg').value = '';
-                document.getElementById('reply-box').style.display = 'none';
-                replyToId = null;
-                document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
-            }}
-        }}
-        document.getElementById('msg').addEventListener('keypress', function (e) {{
-            if (e.key === 'Enter') sendMsg();
-        }});
-    </script>
-    </body>
-    </html>
-    """
+    '''      
+        
 
 # --- SOCKET EVENTS ---
 @socketio.on('join_room')
@@ -1569,161 +1287,78 @@ def handle_delete(data):
     emit('message_deleted', data['msg_id'], room=data['room'])
 
 # --- COMPOSE PAGE (Send DM or Anonymous Compliment) ---
+# --- COMPOSE PAGE (FINAL FULL-SCREEN VERSION) ---
 @app.route('/compose', methods=['GET', 'POST'])
 def compose():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     user = db.session.get(User, int(session['user_id']))
-
-    
+    if not user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
     if request.method == 'POST':
         recipient = request.form['recipient']
         msg = request.form['message']
         is_anonymous = request.form.get('anonymous', False)
-        
         if is_anonymous:
             compliment = Compliment(receiver=recipient, content=msg)
             db.session.add(compliment)
             db.session.commit()
         else:
-            # Send as DM
             room_name = '_'.join(sorted([user.username, recipient]))
             dm_msg = Message(room=room_name, username=user.username, country=user.country, content=msg)
             db.session.add(dm_msg)
             db.session.commit()
-        
         return redirect(url_for('inbox'))
-    
     return '''
     <!DOCTYPE html>
     <html><head><title>Compose</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-    * { box-sizing: border-box; }
-    body {
-        font-family: Arial;
-        background: #0b1a2e;
-        color: white;
-        margin: 0;
-        padding: 0 0 90px 0;
-        min-height: 100vh;
-    }
-    .container {
-        width: 100%;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 12px;
-        box-sizing: border-box;
-        min-height: 80vh;
-    }
-    .card {
-        background: #1a2a3e;
-        padding: 20px;
-        border-radius: 15px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    h1 {
-        color: #00bfff;
-        font-size: 24px;
-        margin: 0 0 15px 0;
-    }
-    input, textarea {
-        width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-        border: none;
-        margin: 8px 0;
-        box-sizing: border-box;
-        font-size: 16px;
-    }
-    textarea {
-        resize: none;
-        height: 100px;
-    }
-    label {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #ccc;
-        font-size: 14px;
-        margin: 10px 0;
-    }
-    input[type="checkbox"] {
-        width: auto;
-        margin: 0;
-    }
-    .btn {
-        width: 100%;
-        padding: 14px;
-        background: #00bfff;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-    .btn:hover {
-        opacity: 0.8;
-    }
-    a {
-        color: #00bfff;
-        text-decoration: none;
-        display: block;
-        text-align: center;
-        margin-top: 15px;
-    }
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: #0f1a2b;
-        display: flex;
-        justify-content: space-around;
-        padding: 12px 0 20px 0;
-        border-top: 1px solid #1a2a3e;
-        z-index: 999;
-    }
-    .nav-item {
-        color: #777;
-        text-decoration: none;
-        font-size: 11px;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-    }
-    .nav-item:hover, .nav-item.active {
-        color: #00bfff;
-    }
-    .nav-icon {
-        font-size: 24px;
-        margin-bottom: 4px;
-    }
-</style>
-</head>
+        * { box-sizing: border-box; }
+        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
+        .container{width:100%;max-width:600px;margin:auto;padding:12px;}
+        .card{background:#1a2a3e;padding:20px;border-radius:15px;width:100%;}
+        h1{color:#00bfff;font-size:24px;margin-bottom:20px;}
+        input,textarea{width:100%;padding:12px;border-radius:10px;border:none;margin:10px 0;font-size:16px;}
+        textarea{resize:none;height:100px;font-family:Arial;}
+        label{display:flex;align-items:center;gap:10px;color:#ccc;font-size:14px;margin:10px 0;}
+        input[type="checkbox"]{width:auto;margin:0;}
+        .btn{width:100%;padding:14px;background:#00bfff;color:white;border:none;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer;}
+        a{color:#00bfff;text-decoration:none;display:block;margin-top:15px;text-align:center;}
+        .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
+        .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
+        .nav-item:hover,.nav-item.active{color:#00bfff;}
+        .nav-icon{font-size:24px;margin-bottom:4px;}
+    </style>
+    </head>
     <body>
     <div class="container">
-    <div class="card">
-        <h1>📨 Compose Message</h1>
-        <form method="POST">
-            <input type="text" name="recipient" placeholder="Enter recipient's username" required>
-            <textarea name="message" placeholder="Write your message..." rows="3" required></textarea>
-            <label>
-                <input type="checkbox" name="anonymous" value="true">
-                Send anonymously (Compliment)
-            </label>
-            <button type="submit" class="btn">Send</button>
-        </form>
-        <a href="/inbox">⬅ Back to Inbox</a>
+        <div class="card">
+            <h1>✉️ Compose Message</h1>
+            <form method="POST">
+                <input type="text" name="recipient" placeholder="Enter recipient's username" required>
+                <textarea name="message" placeholder="Write your message..." rows="3" required></textarea>
+                <label>
+                    <input type="checkbox" name="anonymous">
+                    Send anonymously (Compliment)
+                </label>
+                <button type="submit" class="btn">Send</button>
+            </form>
+            <a href="/inbox">⬅ Back to Inbox</a>
+        </div>
     </div>
-</div>
+    <div class="bottom-nav">
+        <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
+        <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
+        <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏆</span>Leaderboard</a>
+        <a href="/inbox" class="nav-item active"><span class="nav-icon">📨</span>Inbox</a>
+        <a href="/profile/''' + user.username + '''" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
+    </div>
     </body>
     </html>
     '''
+    
 
 # --- INBOX PAGE (Fixed Session) ---
 @app.route('/inbox')
