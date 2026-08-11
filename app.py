@@ -34,6 +34,7 @@ class User(db.Model):
     followers = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)
     joined_date = db.Column(db.DateTime, default=datetime.datetime.now)
+    is_ghost = db.Column(db.Boolean, default=False)
 
 class DailyXP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1976,12 +1977,20 @@ def settings():
             <span class="settings-text">Logout</span>
             <span class="settings-arrow">›</span>
         </a>
-        <a href="#" class="settings-item" style="color:#ff5555;" onclick="if(confirm('Are you sure you want to delete your account? This cannot be undone.')){{alert('Account deletion coming soon!')}}">
-            <span class="settings-icon">🗑️</span>
-            <span class="settings-text">Delete Account</span>
-            <span class="settings-arrow">›</span>
-        </a>
-    </div>
+        <a href="/delete_account" class="settings-item" style="color:#ff5555;" onclick="return confirm('Are you sure you want to permanently delete your account? This cannot be undone. All your posts, messages, and XP will be lost.')">
+    <span class="settings-icon">🗑️</span>
+    <span class="settings-text">Delete Account</span>
+    <span class="settings-arrow">›</span>
+    </a>
+    <!-- GHOST MODE (Only visible to Founder) -->
+<div class="section-title" style="margin-top:20px;">🧊 Founder Tools</div>
+<a href="/toggle_ghost" class="settings-item" style="background:#2a1a1a;border:1px solid #00bfff;">
+    <span class="settings-icon">👻</span>
+    <span class="settings-text">Ghost Mode (Invisible)</span>
+    <span class="settings-arrow">›</span>
+</a>
+    
+</div>
     
     <div class="bottom-nav">
         <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
@@ -2299,6 +2308,28 @@ def read_comments(post_id):
     return "OK"
 
 
+# --- TOGGLE GHOST MODE ---
+@app.route('/toggle_ghost')
+def toggle_ghost():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user = db.session.get(User, int(session['user_id']))
+    if user.username != 'IceQueenAL':
+        return "Access Denied. Only the Founder can use Ghost Mode."
+    user.is_ghost = not user.is_ghost
+    db.session.commit()
+    return redirect(url_for('settings'))
+
+# --- HIDE GHOST FROM ONLINE LIST (Modify Socket.IO) ---
+@socketio.on('connect')
+def handle_connect():
+    if 'user_id' in session:
+        user = db.session.get(User, int(session['user_id']))
+        user.online = True
+        db.session.commit()
+        if not user.is_ghost:
+            emit('user_status', {'username': user.username, 'online': True}, broadcast=True)
+
 # --- FOUNDER'S ADMIN PANEL (Top Secret) ---
 @app.route('/admin')
 def admin_panel():
@@ -2384,6 +2415,26 @@ def setup_db():
     with app.app_context():
         db.create_all()
     return "✅ Database tables created successfully! You can now go back to the app."
+
+# --- DELETE ACCOUNT (PERMANENT) ---
+@app.route('/delete_account')
+def delete_account():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user = db.session.get(User, int(session['user_id']))
+    if user:
+        # Delete all user data
+        Post.query.filter_by(username=user.username).delete()
+        Comment.query.filter_by(username=user.username).delete()
+        Message.query.filter_by(username=user.username).delete()
+        DailyXP.query.filter_by(username=user.username).delete()
+        Compliment.query.filter_by(receiver=user.username).delete()
+        db.session.delete(user)
+        db.session.commit()
+        session.pop('user_id', None)
+    
+    return redirect(url_for('signup'))
 
 # --- LOGOUT ---
 @app.route('/logout')
