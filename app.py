@@ -34,7 +34,6 @@ class User(db.Model):
     followers = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)
     joined_date = db.Column(db.DateTime, default=datetime.datetime.now)
-    is_ghost = db.Column(db.Boolean, default=False)
 
 class DailyXP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
