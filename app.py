@@ -899,66 +899,66 @@ def chat_room(room_name):
             chat.scrollTop = chat.scrollHeight;
         }});
 
-        function addMessage(user, content, msgId, replyTo, isVoice) {{
-            var chat = document.getElementById('chat');
-            var newMsg = document.createElement('div');
-            newMsg.className = 'msg';
-            newMsg.id = 'msg-' + msgId;
-            
-            var replyText = replyTo ? '<small style="color:gray;">Replying to ' + replyTo + '</small><br>' : '';
-            var userDisplay = '<span class="user">' + user + ':</span>';
-            var deleteBtn = '';
-            var reportBtn = '';
+         function addMessage(user, content, msgId, replyTo, isVoice) {{
+    var chat = document.getElementById('chat');
+    var newMsg = document.createElement('div');
+    newMsg.className = 'msg';
+    newMsg.id = 'msg-' + msgId;
+    
+    var replyText = replyTo ? '<small style="color:gray;">Replying to ' + replyTo + '</small><br>' : '';
+    var userDisplay = '<span class="user">' + user + ':</span>';
+    var deleteBtn = '';
+    var reportBtn = '';
 
-            if(user === username) {{
-                deleteBtn = ' <button class="action-btn delete-btn" onclick="deleteMessage(\\'' + msgId + '\\')">🗑️</button>';
-            }} else {{
-                reportBtn = ' <button class="action-btn report-btn" onclick="alert(\\'Report sent to IceQueenAL!\\')">🚩</button>';
-            }}
-            
-            newMsg.innerHTML = replyText + userDisplay + ' ' + content + deleteBtn + reportBtn;
-            
-            // Double-tap to unhighlight
-            var lastTap = 0;
-            newMsg.onclick = function(e) {{
-                if(e.target.tagName.toLowerCase() === 'button') return;
-                var currentTime = new Date().getTime();
-                var tapLength = currentTime - lastTap;
-                if (tapLength < 300 && tapLength > 0) {{
-                    this.classList.remove('highlight');
-                    replyToId = null;
-                    document.getElementById('reply-box').style.display = 'none';
-                }} else {{
-                    document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
-                    this.classList.add('highlight');
-                    replyToId = msgId;
-                    document.getElementById('reply-box').style.display = 'block';
-                    document.getElementById('reply-target').innerText = user + ': ' + content.substring(0,20) + '...';
-                }}
-                lastTap = currentTime;
-            }};
-            
-            chat.appendChild(newMsg);
-            chat.scrollTop = chat.scrollHeight;
+    if(user === username) {{
+        deleteBtn = ' <button class="action-btn delete-btn" onclick="deleteMessage(\\'' + msgId + '\\')">🗑️</button>';
+    }} else {{
+        reportBtn = ' <button class="action-btn report-btn" onclick="alert(\\'Report sent to IceQueenAL!\\')">🚩</button>';
+    }}
+    
+    newMsg.innerHTML = replyText + userDisplay + ' ' + content + deleteBtn + reportBtn;
+    
+    // Double-tap to unhighlight
+    var lastTap = 0;
+    newMsg.onclick = function(e) {{
+        if(e.target.tagName.toLowerCase() === 'button') return;
+        var currentTime = new Date().getTime();
+        var tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {{
+            this.classList.remove('highlight');
+            replyToId = null;
+            document.getElementById('reply-box').style.display = 'none';
+        }} else {{
+            document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
+            this.classList.add('highlight');
+            replyToId = msgId;
+            document.getElementById('reply-box').style.display = 'block';
+            document.getElementById('reply-target').innerText = user + ': ' + content.substring(0,20) + '...';
         }}
+        lastTap = currentTime;
+    }};
+    
+    chat.appendChild(newMsg);
+    chat.scrollTop = chat.scrollHeight;
+}}
 
-        function deleteMessage(msgId) {{
-            if(confirm('Delete this message?')) {{
-                socket.emit('delete_message', {{msg_id: msgId, room: room}});
-                document.getElementById('msg-' + msgId).remove();
-            }}
-        }}
+function deleteMessage(msgId) {{
+    if(confirm('Delete this message?')) {{
+        socket.emit('delete_message', {{msg_id: msgId, room: room}});
+        document.getElementById('msg-' + msgId).remove();
+    }}
+}}               
 
         function sendMsg() {{
-            var msg = document.getElementById('msg').value;
-            if(msg.trim() !== '') {{
-                socket.emit('send_message', {{msg: msg, room: room, username: username, reply_id: replyToId}});
-                document.getElementById('msg').value = '';
-                document.getElementById('reply-box').style.display = 'none';
-                replyToId = null;
-                document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
-            }}
-        }}
+    var msg = document.getElementById('msg').value;
+    if(msg.trim() !== '') {{
+        socket.emit('send_message', {{msg: msg, room: room, username: username, reply_id: replyToId}});
+        document.getElementById('msg').value = '';
+        document.getElementById('reply-box').style.display = 'none';
+        replyToId = null;
+        document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
+    }}
+}}
 
         document.getElementById('msg').addEventListener('keypress', function (e) {{
             if (e.key === 'Enter') sendMsg();
