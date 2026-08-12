@@ -640,30 +640,24 @@ def create_room():
     </html>
     '''
 
-# --- CHATROOMS PAGE (Fixed Session) ---
+
+# --- CHATROOMS PAGE (Full TikTok Style) ---
 @app.route('/chatrooms')
 def chatrooms():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
-    try:
-        user = db.session.get(User, int(session['user_id']))
-        if not user:
-            session.pop('user_id', None)
-            return redirect(url_for('login'))
-    except Exception:
+    user = db.session.get(User, int(session['user_id']))
+    if not user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
     
     search_query = request.args.get('q', '').lower()
-    
     default_rooms = ['global', 'youth', 'premier', 'gaming', 'music', 'study']
     
     all_rooms = db.session.query(Message.room).distinct().all()
     user_rooms = [r[0] for r in all_rooms if r[0] not in default_rooms]
     
     room_names = default_rooms + user_rooms
-    
     if search_query:
         room_names = [r for r in room_names if search_query in r.lower()]
     
@@ -682,7 +676,8 @@ def chatrooms():
             'premier': '👑 Premier Lounge (26+)', 'gaming': '🎮 Gamers Hub',
             'music': '🎵 Music & Vibes', 'study': '📚 Study Squad'
         }
-        if room_name in names: return names[room_name]
+        if room_name in names:
+            return names[room_name]
         return room_name.replace('_', ' ').title()
     
     room_html = ""
@@ -690,7 +685,7 @@ def chatrooms():
         c, v = get_room_stats(r)
         display_name = get_display_name(r)
         room_html += f'''
-        <div class="room-wrapper" style="position:relative;">
+        <div class="room-wrapper">
             <a href="/chat/{r}" class="room-card">
                 <div class="room-info">
                     <span class="room-name">{display_name}</span>
@@ -702,26 +697,26 @@ def chatrooms():
         '''
     
     if not room_html:
-        room_html = '<p style="color:#666;text-align:center;padding:20px;">No rooms found matching your search.</p>'
+        room_html = '<p style="color:#666;text-align:center;padding:20px;">No rooms found.</p>'
     
     return f'''
     <!DOCTYPE html>
-    <html>
-    <head><title>Chatrooms</title>
+    <html><head><title>Chatrooms</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * {{ box-sizing: border-box; }}
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
         .container{{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}}
         h1{{margin-top:10px;}}
-        .room-card{{background:#1a2a3e;border-radius:15px;padding:15px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:white;}}
+        .room-wrapper{{margin-bottom:15px;}}
+        .room-card{{background:#1a2a3e;border-radius:15px;padding:15px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:white;}}
         .room-info{{display:flex;flex-direction:column;}}
         .room-name{{font-size:18px;font-weight:bold;}}
         .room-meta{{font-size:12px;color:#888;}}
         .room-vibe{{font-size:11px;background:#2a3a5e;padding:4px 8px;border-radius:12px;color:#ccc;}}
         .btn{{padding:10px 20px;background:#00bfff;color:white;border:none;border-radius:8px;cursor:pointer;text-decoration:none;font-size:14px;}}
         .add-btn{{background:#6f42c1;}}
-        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;}}
+        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
         .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
         .nav-item:hover,.nav-item.active{{color:#00bfff;}}
         .nav-icon{{font-size:24px;margin-bottom:4px;}}
@@ -747,8 +742,7 @@ def chatrooms():
     </body>
     </html>
     '''
-
-# --- CHAT ROOM (ULTIMATE EDITION: HOLD MENU, REACTIONS, PROFILE CLICK) ---
+# --- CHAT ROOM (ULTIMATE CRASH-PROOF EDITION) ---
 @app.route('/chat/<room_name>')
 def chat_room(room_name):
     if 'user_id' not in session:
@@ -775,7 +769,6 @@ def chat_room(room_name):
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
-        /* FULL TIKTOK-STYLE LAYOUT */
         * {{ box-sizing: border-box; }}
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;}}
         .container{{width:100%;height:100%;display:flex;flex-direction:column;padding:12px;box-sizing:border-box;}}
@@ -792,16 +785,12 @@ def chat_room(room_name):
         a{{color:#00bfff;text-decoration:none;display:block;padding:10px 0;text-align:center;}}
         .user-click{{color:#00bfff;font-weight:bold;cursor:pointer;}}
         .user-click:hover{{text-decoration:underline;}}
-
-        /* HOLD MENU (Dropdown) */
         .msg-menu{{position:absolute;bottom:50px;right:10px;background:#1a2a3e;border-radius:10px;padding:5px;display:none;flex-direction:column;box-shadow:0 4px 15px rgba(0,0,0,0.5);z-index:100;min-width:100px;}}
         .msg-menu button{{background:none;border:none;color:white;padding:10px 15px;text-align:left;font-size:14px;cursor:pointer;border-radius:5px;width:100%;}}
         .msg-menu button:hover{{background:#2a3a5e;}}
         .msg-menu .delete-btn{{color:#ff5555;}}
         .msg-menu .report-btn{{color:#ff5555;}}
         .msg-menu .edit-btn{{color:#00bfff;}}
-
-        /* REACTION EMOJIS */
         .reactions{{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}}
         .reaction-btn{{background:#2a3a5e;border:none;border-radius:15px;padding:4px 10px;color:white;cursor:pointer;font-size:14px;}}
         .reaction-btn:hover{{background:#00bfff;}}
@@ -959,28 +948,44 @@ def chat_room(room_name):
                 lastTap = now;
             }});
 
-            // MENU DROPDOWN
+            // MENU DROPDOWN (Built with JavaScript, NOT Python)
             var menuDiv = document.createElement('div');
             menuDiv.className = 'msg-menu';
             menuDiv.id = 'menu-' + msgId;
-            menuDiv.innerHTML = `
-                <button class="delete-btn" onclick="deleteMessage('{{msgId}}')">🗑️ Delete</button>
-                <button class="edit-btn" onclick="editMessage('{{msgId}}')">✏️ Edit</button>
-                <button class="report-btn" onclick="reportMessage('{{user}}')">🚩 Report</button>
-                <button class="reaction-btn" onclick="sendReaction('{{msgId}}', '❤️')">❤️</button>
-            `;
+            
+            var deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerText = '🗑️ Delete';
+            deleteBtn.onclick = function() {{ deleteMessage(msgId); }};
+            
+            var editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.innerText = '✏️ Edit';
+            editBtn.onclick = function() {{ editMessage(msgId); }};
+            
+            var reportBtn = document.createElement('button');
+            reportBtn.className = 'report-btn';
+            reportBtn.innerText = '🚩 Report';
+            reportBtn.onclick = function() {{ reportMessage(user); }};
+            
+            menuDiv.appendChild(deleteBtn);
+            menuDiv.appendChild(editBtn);
+            menuDiv.appendChild(reportBtn);
             newMsg.appendChild(menuDiv);
 
-            // REACTION EMOJIS (WhatsApp style)
+            // REACTION EMOJIS (Built with JavaScript, NOT Python)
             var reactionRow = document.createElement('div');
             reactionRow.className = 'reactions';
-            reactionRow.innerHTML = `
-                <button class="reaction-btn" onclick="sendReaction('{msgId}', '❤️')">❤️</button>
-                <button class="reaction-btn" onclick="sendReaction('{msgId}', '😂')">😂</button>
-                <button class="reaction-btn" onclick="sendReaction('{msgId}', '😲')">😲</button>
-                <button class="reaction-btn" onclick="sendReaction('{msgId}', '👏')">👏</button>
-                <button class="reaction-btn" onclick="sendReaction('{msgId}', '🔥')">🔥</button>
-            `;
+            
+            var emojis = ['❤️', '😂', '😲', '👏', '🔥'];
+            emojis.forEach(function(emoji) {{
+                var btn = document.createElement('button');
+                btn.className = 'reaction-btn';
+                btn.innerText = emoji;
+                btn.onclick = function() {{ sendReaction(msgId, emoji); }};
+                reactionRow.appendChild(btn);
+            }});
+            
             newMsg.appendChild(reactionRow);
 
             chat.appendChild(newMsg);
@@ -1029,6 +1034,7 @@ def chat_room(room_name):
     </body>
     </html>
     """
+
         
                 
 
