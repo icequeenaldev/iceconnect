@@ -1470,9 +1470,9 @@ def profile(username):
     <div class="container">
         <div class="profile-card">
             <a href="/settings" class="settings-gear">⚙️</a>
-            <img src="{user.profile_pic}" class="profile-img">
-            <h1>{user.username} <span class="flag">{flag}</span></h1>
-            <div class="stats">Followers: {followers_count}</div>
+            <img src="''' + user.profile_pic + '''" class="profile-img">
+<h1>''' + user.username + ''' <span class="flag">''' + flag + '''</span></h1>
+<div class="stats">Followers: ''' + str(followers_count) + '''</div>
             
             <!-- Mood Aura Emoji Selector -->
             <form method="POST" action="/mood">
