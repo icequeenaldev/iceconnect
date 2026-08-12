@@ -1020,6 +1020,7 @@ def chat_room(room_name):
             var msg = document.getElementById('msg').value;
             if(msg.trim() !== '') {{
                 socket.emit('send_message', {{msg: msg, room: room, username: username, reply_id: replyToId}});
+                addMessage(username, msg);   
                 document.getElementById('msg').value = '';
                 document.getElementById('reply-box').style.display = 'none';
                 replyToId = null;
