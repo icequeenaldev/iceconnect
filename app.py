@@ -35,6 +35,11 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     joined_date = db.Column(db.DateTime, default=datetime.datetime.now)
 
+class Follow(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    follower = db.Column(db.String(50), nullable=False)
+    followed = db.Column(db.String(50), nullable=False)
+
 class DailyXP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False)
