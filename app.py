@@ -748,7 +748,7 @@ def chatrooms():
     </html>
     '''
 
-# --- CHAT ROOM (TIKTOK FULL-SCREEN, HIGHLIGHT, DELETE, REPORT) ---
+# --- CHAT ROOM (ULTIMATE EDITION: HOLD MENU, REACTIONS, PROFILE CLICK) ---
 @app.route('/chat/<room_name>')
 def chat_room(room_name):
     if 'user_id' not in session:
@@ -765,9 +765,8 @@ def chat_room(room_name):
     }
     title = room_titles.get(room_name, '🌍 Room')
     
-    # Load past messages
     past_messages = Message.query.filter_by(room=room_name).order_by(Message.timestamp).all()
-    history_html = "".join([f'<div class="msg" id="msg-{m.id}"><span class="user">{m.username}:</span> {m.content}</div>' for m in past_messages])
+    history_html = "".join([f'<div class="msg" id="msg-{m.id}"><span class="user-click" onclick="openProfile(\'{m.username}\')" style="color:#00bfff;font-weight:bold;cursor:pointer;">{m.username}</span>: {m.content}</div>' for m in past_messages])
     
     return f"""
     <!DOCTYPE html>
@@ -776,25 +775,36 @@ def chat_room(room_name):
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
-        /* TIKTOK FULL-SCREEN LAYOUT */
+        /* FULL TIKTOK-STYLE LAYOUT */
         * {{ box-sizing: border-box; }}
         body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;}}
         .container{{width:100%;height:100%;display:flex;flex-direction:column;padding:12px;box-sizing:border-box;}}
         h1{{margin:0 0 10px 0;font-size:20px;color:#00bfff;}}
         #chat{{flex:1;width:100%;border:1px solid #00bfff;overflow-y:auto;padding:10px;background:#1a2a3e;border-radius:10px;margin-bottom:10px;}}
-        .msg{{padding:10px;border-bottom:1px solid #334;cursor:pointer;position:relative;font-size:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}}
+        .msg{{padding:12px;border-bottom:1px solid #334;position:relative;font-size:16px;display:flex;flex-direction:column;}}
         .msg:hover{{background:#2a3a4e;}}
         .highlight{{background:#ffcc00 !important;color:#111;border-radius:5px;}}
-        .user{{color:#00bfff;font-weight:bold;}}
         .reply-box{{background:#334;padding:8px;border-radius:5px;margin-bottom:10px;display:none;color:#ccc;font-size:14px;}}
         .input-row{{display:flex;gap:8px;width:100%;align-items:center;padding:5px 0;background:#0b1a2e;}}
         input{{flex:1;padding:14px;border-radius:8px;border:none;font-size:16px;background:#1a2a3e;color:white;width:100%;}}
         .btn{{padding:14px 18px;background:#00bfff;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:16px;white-space:nowrap;}}
         .icon-btn{{padding:14px;border-radius:8px;cursor:pointer;border:none;font-size:20px;white-space:nowrap;}}
         a{{color:#00bfff;text-decoration:none;display:block;padding:10px 0;text-align:center;}}
-        .action-btn{{background:none;border:none;font-size:14px;cursor:pointer;padding:0 5px;}}
-        .delete-btn{{color:#ff5555;}}
-        .report-btn{{color:#ff5555;}}
+        .user-click{{color:#00bfff;font-weight:bold;cursor:pointer;}}
+        .user-click:hover{{text-decoration:underline;}}
+
+        /* HOLD MENU (Dropdown) */
+        .msg-menu{{position:absolute;bottom:50px;right:10px;background:#1a2a3e;border-radius:10px;padding:5px;display:none;flex-direction:column;box-shadow:0 4px 15px rgba(0,0,0,0.5);z-index:100;min-width:100px;}}
+        .msg-menu button{{background:none;border:none;color:white;padding:10px 15px;text-align:left;font-size:14px;cursor:pointer;border-radius:5px;width:100%;}}
+        .msg-menu button:hover{{background:#2a3a5e;}}
+        .msg-menu .delete-btn{{color:#ff5555;}}
+        .msg-menu .report-btn{{color:#ff5555;}}
+        .msg-menu .edit-btn{{color:#00bfff;}}
+
+        /* REACTION EMOJIS */
+        .reactions{{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}}
+        .reaction-btn{{background:#2a3a5e;border:none;border-radius:15px;padding:4px 10px;color:white;cursor:pointer;font-size:14px;}}
+        .reaction-btn:hover{{background:#00bfff;}}
     </style>
     </head>
     <body>
@@ -818,6 +828,7 @@ def chat_room(room_name):
         var username = "{user.username}";
         var room = "{room_name}";
         var replyToId = null;
+        var lastTap = 0;
         var mediaRecorder;
         var audioChunks = [];
         var isRecording = false;
@@ -864,6 +875,10 @@ def chat_room(room_name):
             }}
         }}
 
+        function openProfile(username) {{
+            window.location.href = '/profile/' + username;
+        }}
+
         socket.on('connect', function() {{
             socket.emit('join_room', {{username: username, room: room}});
         }});
@@ -885,7 +900,7 @@ def chat_room(room_name):
             var chat = document.getElementById('chat');
             var newMsg = document.createElement('div');
             newMsg.className = 'msg';
-            newMsg.innerHTML = '<span class="user">' + data[0] + ':</span> 🎵 <audio controls src="' + data[1] + '"></audio>';
+            newMsg.innerHTML = '<span class="user-click" onclick="openProfile(\\'' + data[0] + '\\')" style="color:#00bfff;font-weight:bold;cursor:pointer;">' + data[0] + '</span>: 🎵 <audio controls src="' + data[1] + '"></audio>';
             chat.appendChild(newMsg);
             chat.scrollTop = chat.scrollHeight;
         }});
@@ -894,71 +909,117 @@ def chat_room(room_name):
             var chat = document.getElementById('chat');
             var newMsg = document.createElement('div');
             newMsg.className = 'msg';
-            newMsg.innerHTML = '<span class="user">' + data[0] + ':</span> 📷 <img src="' + data[1] + '" style="max-width:200px;border-radius:10px;margin-top:5px;">';
+            newMsg.innerHTML = '<span class="user-click" onclick="openProfile(\\'' + data[0] + '\\')" style="color:#00bfff;font-weight:bold;cursor:pointer;">' + data[0] + '</span>: 📷 <img src="' + data[1] + '" style="max-width:200px;border-radius:10px;margin-top:5px;">';
             chat.appendChild(newMsg);
             chat.scrollTop = chat.scrollHeight;
         }});
 
-         function addMessage(user, content, msgId, replyTo, isVoice) {{
-    var chat = document.getElementById('chat');
-    var newMsg = document.createElement('div');
-    newMsg.className = 'msg';
-    newMsg.id = 'msg-' + msgId;
-    
-    var replyText = replyTo ? '<small style="color:gray;">Replying to ' + replyTo + '</small><br>' : '';
-    var userDisplay = '<span class="user">' + user + ':</span>';
-    var deleteBtn = '';
-    var reportBtn = '';
+        function addMessage(user, content, msgId, replyTo) {{
+            var chat = document.getElementById('chat');
+            var newMsg = document.createElement('div');
+            newMsg.className = 'msg';
+            newMsg.id = 'msg-' + msgId;
+            
+            var replyText = replyTo ? '<small style="color:gray;">Replying to ' + replyTo + '</small><br>' : '';
+            newMsg.innerHTML = replyText + '<span class="user-click" onclick="openProfile(\\'' + user + '\\')" style="color:#00bfff;font-weight:bold;cursor:pointer;">' + user + '</span>: ' + content;
+            
+            // HOLD TO SHOW MENU (Delete, Edit, Report)
+            var holdTimer;
+            newMsg.addEventListener('touchstart', function(e) {{
+                holdTimer = setTimeout(() => {{
+                    var menu = document.getElementById('menu-' + msgId);
+                    if(menu) {{
+                        menu.style.display = 'flex';
+                    }}
+                }}, 600);
+            }});
+            newMsg.addEventListener('touchend', function(e) {{
+                clearTimeout(holdTimer);
+            }});
+            newMsg.addEventListener('touchmove', function(e) {{
+                clearTimeout(holdTimer);
+            }});
 
-    if(user === username) {{
-        deleteBtn = ' <button class="action-btn delete-btn" onclick="deleteMessage(\\'' + msgId + '\\')">🗑️</button>';
-    }} else {{
-        reportBtn = ' <button class="action-btn report-btn" onclick="alert(\\'Report sent to IceQueenAL!\\')">🚩</button>';
-    }}
-    
-    newMsg.innerHTML = replyText + userDisplay + ' ' + content + deleteBtn + reportBtn;
-    
-    // Double-tap to unhighlight
-    var lastTap = 0;
-    newMsg.onclick = function(e) {{
-        if(e.target.tagName.toLowerCase() === 'button') return;
-        var currentTime = new Date().getTime();
-        var tapLength = currentTime - lastTap;
-        if (tapLength < 300 && tapLength > 0) {{
-            this.classList.remove('highlight');
-            replyToId = null;
-            document.getElementById('reply-box').style.display = 'none';
-        }} else {{
-            document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
-            this.classList.add('highlight');
-            replyToId = msgId;
-            document.getElementById('reply-box').style.display = 'block';
-            document.getElementById('reply-target').innerText = user + ': ' + content.substring(0,20) + '...';
+            // DOUBLE TAP TO HIGHLIGHT / REPLY
+            newMsg.addEventListener('click', function(e) {{
+                if(e.target.tagName.toLowerCase() === 'button') return;
+                var now = new Date().getTime();
+                var tapLen = now - lastTap;
+                if(tapLen < 300 && tapLen > 0) {{
+                    this.classList.remove('highlight');
+                    replyToId = null;
+                    document.getElementById('reply-box').style.display = 'none';
+                }} else {{
+                    document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
+                    this.classList.add('highlight');
+                    replyToId = msgId;
+                    document.getElementById('reply-box').style.display = 'block';
+                    document.getElementById('reply-target').innerText = user + ': ' + content.substring(0,20) + '...';
+                }}
+                lastTap = now;
+            }});
+
+            // MENU DROPDOWN
+            var menuDiv = document.createElement('div');
+            menuDiv.className = 'msg-menu';
+            menuDiv.id = 'menu-' + msgId;
+            menuDiv.innerHTML = `
+                <button class="delete-btn" onclick="deleteMessage('{msgId}')">🗑️ Delete</button>
+                <button class="edit-btn" onclick="editMessage('{msgId}')">✏️ Edit</button>
+                <button class="report-btn" onclick="reportMessage('{user}')">🚩 Report</button>
+            `;
+            newMsg.appendChild(menuDiv);
+
+            // REACTION EMOJIS (WhatsApp style)
+            var reactionRow = document.createElement('div');
+            reactionRow.className = 'reactions';
+            reactionRow.innerHTML = `
+                <button class="reaction-btn" onclick="sendReaction('{msgId}', '❤️')">❤️</button>
+                <button class="reaction-btn" onclick="sendReaction('{msgId}', '😂')">😂</button>
+                <button class="reaction-btn" onclick="sendReaction('{msgId}', '😲')">😲</button>
+                <button class="reaction-btn" onclick="sendReaction('{msgId}', '👏')">👏</button>
+                <button class="reaction-btn" onclick="sendReaction('{msgId}', '🔥')">🔥</button>
+            `;
+            newMsg.appendChild(reactionRow);
+
+            chat.appendChild(newMsg);
+            chat.scrollTop = chat.scrollHeight;
         }}
-        lastTap = currentTime;
-    }};
-    
-    chat.appendChild(newMsg);
-    chat.scrollTop = chat.scrollHeight;
-}}
 
-function deleteMessage(msgId) {{
-    if(confirm('Delete this message?')) {{
-        socket.emit('delete_message', {{msg_id: msgId, room: room}});
-        document.getElementById('msg-' + msgId).remove();
-    }}
-}}               
+        function deleteMessage(msgId) {{
+            if(confirm('Delete this message?')) {{
+                socket.emit('delete_message', {{msg_id: msgId, room: room}});
+                document.getElementById('msg-' + msgId).remove();
+            }}
+        }}
+
+        function editMessage(msgId) {{
+            var msgEl = document.getElementById('msg-' + msgId);
+            var content = prompt('Edit your message:', msgEl.innerText.split(': ')[1]);
+            if(content !== null) {{
+                socket.emit('edit_message', {{msg_id: msgId, content: content, room: room}});
+                msgEl.innerHTML = msgEl.innerHTML.replace(/:.+/, ': ' + content);
+            }}
+        }}
+
+        function reportMessage(user) {{
+            alert('Report sent to IceQueenAL for user: ' + user);
+        }}
+
+        function sendReaction(msgId, emoji) {{
+            socket.emit('send_reaction', {{msg_id: msgId, reaction: emoji, room: room}});
+        }}
 
         function sendMsg() {{
-    var msg = document.getElementById('msg').value;
-    if(msg.trim() !== '') {{
-        socket.emit('send_message', {{msg: msg, room: room, username: username, reply_id: replyToId}});
-        document.getElementById('msg').value = '';
-        document.getElementById('reply-box').style.display = 'none';
-        replyToId = null;
-        document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
-    }}
-}}
+            var msg = document.getElementById('msg').value;
+            if(msg.trim() !== '') {{
+                socket.emit('send_message', {{msg: msg, room: room, username: username, reply_id: replyToId}});
+                document.getElementById('msg').value = '';
+                document.getElementById('reply-box').style.display = 'none';
+                replyToId = null;
+                document.querySelectorAll('.msg').forEach(el => el.classList.remove('highlight'));
+            }}
+        }}
 
         document.getElementById('msg').addEventListener('keypress', function (e) {{
             if (e.key === 'Enter') sendMsg();
