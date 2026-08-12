@@ -2504,6 +2504,20 @@ def delete_account():
     
     return redirect(url_for('signup'))
 
+# --- TEMPORARY: CLEAR CHAT MESSAGES ---
+@app.route('/clear_chat')
+def clear_chat():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user = db.session.get(User, int(session['user_id']))
+    if user.username != 'IceQueenAL':
+        return "Access Denied. Only the Founder can clear chat history."
+    
+    # Delete all messages from the database
+    Message.query.delete()
+    db.session.commit()
+    return "✅ All chat messages have been deleted. You can now go back to the app."
+
 # --- LOGOUT ---
 @app.route('/logout')
 def logout():
