@@ -1084,64 +1084,71 @@ def login():
     </html>
     '''
 
-# --- NEW FEATURES ROUTES ---
+# --- UPDATE MOOD VIBE (EMOJI) ---
 @app.route('/mood', methods=['GET', 'POST'])
 def mood():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    user = db.session.get(User, int(session['user_id']))
     if request.method == 'POST':
-        user = db.session.get(User, int(session['user_id']))
-        
-        user.mood_color = request.form['color']
+        mood_emoji = request.form.get('mood_emoji', '🧊')
+        user.mood_color = mood_emoji
         db.session.commit()
-        add_xp(user.username, 5)
-        return redirect(url_for('home'))
+        return redirect(url_for('profile', username=user.username))
     return '''
     <!DOCTYPE html>
     <html><head><title>Change Mood</title>
-    <style>body{font-family:Arial;background:#0b1a2e;color:white;text-align:center;padding:20px;}
-    .card{background:#1a2a3e;padding:30px;border-radius:15px;max-width:400px;margin:auto;}
-    .btn{display:block;padding:15px;background:#00bfff;color:white;text-decoration:none;border-radius:8px;margin:10px 0;border:none;cursor:pointer;}
-    input[type="color"]{width:100px;height:100px;border:none;background:none;cursor:pointer;}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body{font-family:Arial;background:#0b1a2e;color:white;text-align:center;padding:20px;}
+        .card{background:#1a2a3e;padding:30px;border-radius:15px;max-width:400px;margin:auto;}
+        .btn{display:block;padding:15px;background:#00bfff;color:white;text-decoration:none;border-radius:8px;margin:10px 0;border:none;cursor:pointer;}
+        select{padding:10px;border-radius:5px;border:none;width:200px;font-size:16px;}
     </style>
     </head>
     <body>
     <div class="card">
-        <h1>🎨 Mood Aura</h1>
-        <p>Pick a color that matches your vibe right now.</p>
+        <h1>🎨 Change Mood Vibe</h1>
+        <p>Pick an emoji that matches your vibe right now.</p>
         <form method="POST">
-            <input type="color" name="color" value="#00bfff">
-            <button type="submit" class="btn">Set My Aura</button>
+            <select name="mood_emoji">
+                <option value="🧊">🧊 Ice Cold</option>
+                <option value="🔥">🔥 Fire</option>
+                <option value="😎">😎 Cool</option>
+                <option value="🥶">🥶 Freezing</option>
+                <option value="💀">💀 Dead</option>
+                <option value="✨">✨ Sparkles</option>
+            </select>
+            <button type="submit" class="btn">Set My Mood</button>
         </form>
-        <a href="/">⬅ Back</a>
+        <a href="/profile/''' + user.username + '''">⬅ Back to Profile</a>
     </div>
     </body>
     </html>
     '''
 
+# --- TIME CAPSULE ROUTE ---
 @app.route('/capsule', methods=['GET', 'POST'])
 def capsule():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    user = db.session.get(User, int(session['user_id']))
     if request.method == 'POST':
-        user = db.session.get(User, int(session['user_id']))
-    
         content = request.form['content']
         days = int(request.form['days'])
         unlock_date = datetime.datetime.now() + datetime.timedelta(days=days)
         capsule = TimeCapsule(username=user.username, content=content, unlock_date=unlock_date)
         db.session.add(capsule)
         db.session.commit()
-        add_xp(user.username, 20)
-        return f"Time capsule buried! It unlocks in {days} days."
+        # Redirect back to their own profile page
+        return redirect(url_for('profile', username=user.username))
     return '''
     <!DOCTYPE html>
     <html><head><title>Time Capsule</title>
     <style>body{font-family:Arial;background:#0b1a2e;color:white;text-align:center;padding:20px;}
     .card{background:#1a2a3e;padding:30px;border-radius:15px;max-width:400px;margin:auto;}
     .btn{display:block;padding:15px;background:#00bfff;color:white;text-decoration:none;border-radius:8px;margin:10px 0;border:none;cursor:pointer;}
-    input,textarea{padding:10px;width:90%;border-radius:5px;border:none;margin:5px 0;}
-    </style>
+    input,textarea{padding:10px;width:90%;border-radius:5px;border:none;margin:5px 0;}</style>
     </head>
     <body>
     <div class="card">
@@ -1157,52 +1164,12 @@ def capsule():
             </select>
             <button type="submit" class="btn">Bury Capsule</button>
         </form>
-        <a href="/">⬅ Back</a>
+        <a href="/profile/''' + user.username + '''">⬅ Back to Profile</a>
     </div>
     </body>
     </html>
     '''
 
-@app.route('/compliment', methods=['GET', 'POST'])
-def compliment():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    if request.method == 'POST':
-        user = db.session.get(User, int(session['user_id']))
-        
-        receiver = request.form['receiver']
-        content = request.form['content']
-        last_hour = Compliment.query.filter_by(receiver=receiver).order_by(Compliment.timestamp.desc()).first()
-        if last_hour and (datetime.datetime.now() - last_hour.timestamp).seconds < 3600:
-            return "Please wait 1 hour before sending another compliment to this user."
-        compliment = Compliment(receiver=receiver, content=content)
-        db.session.add(compliment)
-        db.session.commit()
-        add_xp(user.username, 10)
-        return "Anonymous compliment sent! 💖"
-    return '''
-    <!DOCTYPE html>
-    <html><head><title>Send Compliment</title>
-    <style>body{font-family:Arial;background:#0b1a2e;color:white;text-align:center;padding:20px;}
-    .card{background:#1a2a3e;padding:30px;border-radius:15px;max-width:400px;margin:auto;}
-    .btn{display:block;padding:15px;background:#00bfff;color:white;text-decoration:none;border-radius:8px;margin:10px 0;border:none;cursor:pointer;}
-    input,textarea{padding:10px;width:90%;border-radius:5px;border:none;margin:5px 0;}
-    </style>
-    </head>
-    <body>
-    <div class="card">
-        <h1>💖 Send Anonymous Compliment</h1>
-        <p>Send a kind message to someone secretly.</p>
-        <form method="POST">
-            <input type="text" name="receiver" placeholder="Receiver's username" required>
-            <textarea name="content" placeholder="Your kind message..." rows="2" required></textarea>
-            <button type="submit" class="btn">Send Compliment</button>
-        </form>
-        <a href="/">⬅ Back</a>
-    </div>
-    </body>
-    </html>
-    '''
 # --- SEARCH BAR ---
 @app.route('/search', methods=['GET'])
 def search():
@@ -1395,7 +1362,8 @@ def vote(poll_id, choice):
     add_xp(user.username, 5)
     return redirect(url_for('poll'))
 
-# --- PROFILE PAGE (With Settings Gear Icon) ---
+
+# --- PROFILE PAGE (ULTIMATE TIKTOK STYLE) ---
 @app.route('/profile/<username>', methods=['GET', 'POST'])
 def profile(username):
     if 'user_id' not in session:
@@ -1404,8 +1372,18 @@ def profile(username):
     if not user:
         return "User not found!"
     
+    session_user = db.session.get(User, int(session['user_id']))
+    is_following = Follow.query.filter_by(follower=session_user.username, followed=user.username).first()
+    
     if request.method == 'POST':
-        if 'post_image' in request.files or 'post_caption' in request.form:
+        if 'profile_pic' in request.files:
+            file = request.files['profile_pic']
+            if file:
+                img_data = base64.b64encode(file.read()).decode('utf-8')
+                user.profile_pic = f"data:{file.mimetype};base64,{img_data}"
+                db.session.commit()
+            return redirect(url_for('profile', username=username))
+        elif 'post_image' in request.files or 'post_caption' in request.form:
             caption = request.form.get('post_caption', '')
             file = request.files.get('post_image')
             image_data = ''
@@ -1415,13 +1393,19 @@ def profile(username):
             new_post = Post(username=user.username, content=caption, image=image_data)
             db.session.add(new_post)
             db.session.commit()
-        elif 'profile_pic' in request.files:
-            file = request.files['profile_pic']
-            if file:
-                img_data = base64.b64encode(file.read()).decode('utf-8')
-                user.profile_pic = f"data:{file.mimetype};base64,{img_data}"
+            return redirect(url_for('profile', username=username))
+        elif 'follow' in request.form:
+            if not is_following:
+                follow = Follow(follower=session_user.username, followed=user.username)
+                user.followers += 1
+                db.session.add(follow)
                 db.session.commit()
-        return redirect(url_for('profile', username=username))
+        elif 'unfollow' in request.form:
+            if is_following:
+                db.session.delete(is_following)
+                user.followers -= 1
+                db.session.commit()
+            return redirect(url_for('profile', username=username))
     
     user_posts = Post.query.filter_by(username=user.username).order_by(Post.timestamp.desc()).all()
     post_html = ""
@@ -1437,6 +1421,9 @@ def profile(username):
         </div>
         '''
     
+    flag = get_flag(user.country)
+    followers_count = Follow.query.filter_by(followed=user.username).count()
+    
     return '''
     <!DOCTYPE html>
     <html><head><title>''' + user.username + ''''s Profile</title>
@@ -1446,12 +1433,16 @@ def profile(username):
         body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
         .container{width:100%;max-width:600px;margin:auto;padding:12px;}
         .profile-card{background:#1a2a3e;padding:20px;border-radius:15px;width:100%;position:relative;}
-        .profile-img{width:120px;height:120px;border-radius:50%;border:5px solid ''' + user.mood_color + ''';object-fit:cover;display:block;margin:0 auto 15px auto;}
+        .profile-img{width:120px;height:120px;border-radius:50%;border:3px solid #00bfff;object-fit:cover;display:block;margin:0 auto 15px auto;}
         h1{text-align:center;color:#00bfff;font-size:24px;margin:10px 0;}
+        .flag{font-size:24px;}
+        .stats{text-align:center;color:#ccc;font-size:14px;margin:5px 0;}
         .btn{display:block;padding:14px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;font-size:16px;}
+        .btn-follow{background:#28a745;}
+        .btn-unfollow{background:#ff5555;}
+        .btn-dm{background:#6f42c1;}
         .btn-mood{background:#ffc107;color:#111;}
         .btn-capsule{background:#6f42c1;}
-        .btn-compliment{background:#28a745;}
         .btn-poll{background:#ffc107;color:#111;}
         .post-input{width:100%;padding:12px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:14px;margin:10px 0;resize:none;}
         .post-btn{background:#00bfff;color:white;border:none;border-radius:12px;padding:12px 24px;cursor:pointer;font-weight:bold;}
@@ -1462,12 +1453,8 @@ def profile(username):
         .post-time{font-size:11px;color:#666;}
         .post-content{font-size:14px;color:#ddd;margin:5px 0;}
         .post-image{width:100%;border-radius:10px;margin-top:10px;}
-        
-        /* GEAR ICON AT TOP LEFT */
         .settings-gear{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;z-index:10;}
         .settings-gear:hover{color:#00bfff;transform:rotate(90deg);}
-        
-        /* BOTTOM NAV BAR */
         .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
         .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
         .nav-item:hover,.nav-item.active{color:#00bfff;}
@@ -1477,19 +1464,44 @@ def profile(username):
     <body>
     <div class="container">
         <div class="profile-card">
-            <!-- SETTINGS GEAR ICON AT TOP LEFT -->
             <a href="/settings" class="settings-gear">⚙️</a>
-            
             <img src="''' + user.profile_pic + '''" class="profile-img">
-            <h1>''' + user.username + ' ' + get_flag(user.country) + '''</h1>
-            <p style="text-align:center;color:#ccc;font-size:14px;">Level ''' + str(user.level) + ''' • ⭐ ''' + str(user.xp) + ''' XP • 💎 ''' + str(user.coins) + ''' Crystals</p>
-            <hr style="border-color:#334;">
-            <a href="/mood" class="btn btn-mood">🎨 Change Mood Aura</a>
-            <a href="/capsule" class="btn btn-capsule">📜 Bury a Time Capsule</a>
-            <a href="/compliment" class="btn btn-compliment">💖 Send Anonymous Compliment</a>
-            <a href="/poll" class="btn btn-poll">🗳️ Vote in Today's Poll</a>
+            <h1>''' + user.username + ' <span class="flag">' + flag + '</span></h1>
+            <div class="stats">Followers: ''' + str(followers_count) + '''</div>
+            
+            <!-- Mood Aura Emoji Selector -->
+            <form method="POST" action="/mood">
+                <label style="color:#ccc;font-size:14px;">Your Mood Vibe:</label>
+                <select name="mood_emoji" style="width:100%;padding:10px;border-radius:8px;border:none;margin:5px 0;font-size:16px;">
+                    <option value="🧊">🧊 Ice Cold</option>
+                    <option value="🔥">🔥 Fire</option>
+                    <option value="😎">😎 Cool</option>
+                    <option value="🥶">🥶 Freezing</option>
+                    <option value="💀">💀 Dead</option>
+                    <option value="✨">✨ Sparkles</option>
+                </select>
+                <button type="submit" class="btn btn-mood">Update Mood Vibe</button>
+            </form>
             
             <hr style="border-color:#334;">
+            
+            <!-- Follow / Unfollow Button -->
+            ''' + ('''
+            <form method="POST">
+                <button type="submit" name="unfollow" class="btn btn-unfollow">Unfollow</button>
+            </form>
+            ''' if is_following else '''
+            <form method="POST">
+                <button type="submit" name="follow" class="btn btn-follow">Follow</button>
+            </form>
+            ''') + '''
+            
+            <!-- DM Button -->
+            <a href="/dm/''' + user.username + '''" class="btn btn-dm">💬 Send DM</a>
+            
+            <hr style="border-color:#334;">
+            
+            <!-- Post to Feed -->
             <h3 style="color:#ccc;font-size:14px;text-align:left;">📸 Create a Post</h3>
             <form method="POST" enctype="multipart/form-data">
                 <input type="file" name="post_image" accept="image/*" style="color:#ccc;margin:10px 0;">
@@ -1498,6 +1510,8 @@ def profile(username):
             </form>
             
             <hr style="border-color:#334;">
+            
+            <!-- Update Profile Picture -->
             <h3 style="color:#ccc;font-size:14px;text-align:left;">🖼️ Update Profile Picture</h3>
             <form method="POST" enctype="multipart/form-data">
                 <input type="file" name="profile_pic" accept="image/*">
@@ -1518,7 +1532,7 @@ def profile(username):
     </div>
     </body>
     </html>
-    '''      
+    '''
         
 
 # --- SOCKET EVENTS ---
