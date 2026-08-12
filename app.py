@@ -1363,7 +1363,7 @@ def vote(poll_id, choice):
     return redirect(url_for('poll'))
 
 
-# --- PROFILE PAGE (ULTIMATE TIKTOK STYLE) ---
+# --- PROFILE PAGE (FINAL CRASH-PROOF VERSION) ---
 @app.route('/profile/<username>', methods=['GET', 'POST'])
 def profile(username):
     if 'user_id' not in session:
@@ -1410,7 +1410,7 @@ def profile(username):
     user_posts = Post.query.filter_by(username=user.username).order_by(Post.timestamp.desc()).all()
     post_html = ""
     for p in user_posts:
-        post_html += f'''
+        post_html += f"""
         <div class="post-card">
             <div class="post-header">
                 <span class="post-user">@{p.username}</span>
@@ -1419,55 +1419,55 @@ def profile(username):
             <div class="post-content">{p.content}</div>
             {f'<img src="{p.image}" class="post-image">' if p.image else ''}
         </div>
-        '''
+        """
     
     flag = get_flag(user.country)
     followers_count = Follow.query.filter_by(followed=user.username).count()
     
-    return '''
+    return f"""
     <!DOCTYPE html>
-    <html><head><title>''' + user.username + ''''s Profile</title>
+    <html><head><title>{user.username}'s Profile</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        * { box-sizing: border-box; }
-        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-        .container{width:100%;max-width:600px;margin:auto;padding:12px;}
-        .profile-card{background:#1a2a3e;padding:20px;border-radius:15px;width:100%;position:relative;}
-        .profile-img{width:120px;height:120px;border-radius:50%;border:3px solid #00bfff;object-fit:cover;display:block;margin:0 auto 15px auto;}
-        h1{text-align:center;color:#00bfff;font-size:24px;margin:10px 0;}
-        .flag{font-size:24px;}
-        .stats{text-align:center;color:#ccc;font-size:14px;margin:5px 0;}
-        .btn{display:block;padding:14px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;font-size:16px;}
-        .btn-follow{background:#28a745;}
-        .btn-unfollow{background:#ff5555;}
-        .btn-dm{background:#6f42c1;}
-        .btn-mood{background:#ffc107;color:#111;}
-        .btn-capsule{background:#6f42c1;}
-        .btn-poll{background:#ffc107;color:#111;}
-        .post-input{width:100%;padding:12px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:14px;margin:10px 0;resize:none;}
-        .post-btn{background:#00bfff;color:white;border:none;border-radius:12px;padding:12px 24px;cursor:pointer;font-weight:bold;}
-        .btn-upload{background:#28a745;width:100%;padding:12px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;}
-        .post-card{background:#1a2a3e;padding:15px;border-radius:15px;margin-bottom:15px;}
-        .post-header{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
-        .post-user{font-weight:bold;color:#00bfff;}
-        .post-time{font-size:11px;color:#666;}
-        .post-content{font-size:14px;color:#ddd;margin:5px 0;}
-        .post-image{width:100%;border-radius:10px;margin-top:10px;}
-        .settings-gear{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;z-index:10;}
-        .settings-gear:hover{color:#00bfff;transform:rotate(90deg);}
-        .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}
-        .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
-        .nav-item:hover,.nav-item.active{color:#00bfff;}
-        .nav-icon{font-size:24px;margin-bottom:4px;}
+        * {{ box-sizing: border-box; }}
+        body{{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}}
+        .container{{width:100%;max-width:600px;margin:auto;padding:12px;}}
+        .profile-card{{background:#1a2a3e;padding:20px;border-radius:15px;width:100%;position:relative;}}
+        .profile-img{{width:120px;height:120px;border-radius:50%;border:3px solid #00bfff;object-fit:cover;display:block;margin:0 auto 15px auto;}}
+        h1{{text-align:center;color:#00bfff;font-size:24px;margin:10px 0;}}
+        .flag{{font-size:24px;}}
+        .stats{{text-align:center;color:#ccc;font-size:14px;margin:5px 0;}}
+        .btn{{display:block;padding:14px;background:#00bfff;color:white;text-decoration:none;border-radius:12px;margin:10px 0;text-align:center;font-weight:bold;font-size:16px;}}
+        .btn-follow{{background:#28a745;}}
+        .btn-unfollow{{background:#ff5555;}}
+        .btn-dm{{background:#6f42c1;}}
+        .btn-mood{{background:#ffc107;color:#111;}}
+        .btn-capsule{{background:#6f42c1;}}
+        .btn-poll{{background:#ffc107;color:#111;}}
+        .post-input{{width:100%;padding:12px;border-radius:12px;border:none;background:#0b1a2e;color:white;font-size:14px;margin:10px 0;resize:none;}}
+        .post-btn{{background:#00bfff;color:white;border:none;border-radius:12px;padding:12px 24px;cursor:pointer;font-weight:bold;}}
+        .btn-upload{{background:#28a745;width:100%;padding:12px;border:none;border-radius:12px;color:white;cursor:pointer;font-weight:bold;}}
+        .post-card{{background:#1a2a3e;padding:15px;border-radius:15px;margin-bottom:15px;}}
+        .post-header{{display:flex;align-items:center;gap:10px;margin-bottom:5px;}}
+        .post-user{{font-weight:bold;color:#00bfff;}}
+        .post-time{{font-size:11px;color:#666;}}
+        .post-content{{font-size:14px;color:#ddd;margin:5px 0;}}
+        .post-image{{width:100%;border-radius:10px;margin-top:10px;}}
+        .settings-gear{{position:absolute;top:15px;right:15px;font-size:24px;color:#888;text-decoration:none;cursor:pointer;transition:0.3s;z-index:10;}}
+        .settings-gear:hover{{color:#00bfff;transform:rotate(90deg);}}
+        .bottom-nav{{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;backdrop-filter:blur(8px);}}
+        .nav-item{{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}}
+        .nav-item:hover,.nav-item.active{{color:#00bfff;}}
+        .nav-icon{{font-size:24px;margin-bottom:4px;}}
     </style>
     </head>
     <body>
     <div class="container">
         <div class="profile-card">
             <a href="/settings" class="settings-gear">⚙️</a>
-            <img src="''' + user.profile_pic + '''" class="profile-img">
-            <h1>''' + user.username + ' <span class="flag">' + flag + '</span></h1>
-            <div class="stats">Followers: ''' + str(followers_count) + '''</div>
+            <img src="{user.profile_pic}" class="profile-img">
+            <h1>{user.username} <span class="flag">{flag}</span></h1>
+            <div class="stats">Followers: {followers_count}</div>
             
             <!-- Mood Aura Emoji Selector -->
             <form method="POST" action="/mood">
@@ -1486,7 +1486,7 @@ def profile(username):
             <hr style="border-color:#334;">
             
             <!-- Follow / Unfollow Button -->
-            ''' + ('''
+            {'''
             <form method="POST">
                 <button type="submit" name="unfollow" class="btn btn-unfollow">Unfollow</button>
             </form>
@@ -1494,10 +1494,10 @@ def profile(username):
             <form method="POST">
                 <button type="submit" name="follow" class="btn btn-follow">Follow</button>
             </form>
-            ''') + '''
+            '''}
             
             <!-- DM Button -->
-            <a href="/dm/''' + user.username + '''" class="btn btn-dm">💬 Send DM</a>
+            <a href="/dm/{user.username}" class="btn btn-dm">💬 Send DM</a>
             
             <hr style="border-color:#334;">
             
@@ -1520,7 +1520,7 @@ def profile(username):
             
             <hr style="border-color:#334;">
             <h3 style="color:#ccc;font-size:14px;text-align:left;">📰 Your Posts</h3>
-            ''' + (post_html if post_html else '<p style="color:#666;text-align:center;">You haven\'t posted anything yet.</p>') + '''
+            {post_html if post_html else '<p style="color:#666;text-align:center;">You haven\'t posted anything yet.</p>'}
         </div>
     </div>
     <div class="bottom-nav">
@@ -1528,11 +1528,11 @@ def profile(username):
         <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
         <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏆</span>Leaderboard</a>
         <a href="/inbox" class="nav-item"><span class="nav-icon">📨</span>Inbox</a>
-        <a href="/profile/''' + user.username + '''" class="nav-item active"><span class="nav-icon">👤</span>Profile</a>
+        <a href="/profile/{user.username}" class="nav-item active"><span class="nav-icon">👤</span>Profile</a>
     </div>
     </body>
     </html>
-    '''
+    """
         
 
 # --- SOCKET EVENTS ---
