@@ -964,7 +964,7 @@ def chat_room(room_name):
             menuDiv.className = 'msg-menu';
             menuDiv.id = 'menu-' + msgId;
             menuDiv.innerHTML = `
-                <button class="delete-btn" onclick="deleteMessage('{msgId}')">🗑️ Delete</button>
+                <button class="delete-btn" onclick="deleteMessage('{{msgId}}')">🗑️ Delete</button>
                 <button class="edit-btn" onclick="editMessage('{msgId}')">✏️ Edit</button>
                 <button class="report-btn" onclick="reportMessage('{user}')">🚩 Report</button>
             `;
