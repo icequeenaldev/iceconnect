@@ -2307,15 +2307,6 @@ def settings():
     <span class="settings-text">Delete Account</span>
     <span class="settings-arrow">›</span>
     </a>
-    <!-- GHOST MODE (Only visible to Founder) -->
-<div class="section-title" style="margin-top:20px;">🧊 Founder Tools</div>
-<a href="/toggle_ghost" class="settings-item" style="background:#2a1a1a;border:1px solid #00bfff;">
-    <span class="settings-icon">👻</span>
-    <span class="settings-text">Ghost Mode (Invisible)</span>
-    <span class="settings-arrow">›</span>
-</a>
-    
-</div>
     
     <div class="bottom-nav">
         <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
