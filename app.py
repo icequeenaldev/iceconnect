@@ -14,6 +14,9 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True, 'pool_recycle'
 db = SQLAlchemy(app)
 socketio = SocketIO(app, max_http_buffer_size=10000000)
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 # --- DATABASE MODELS ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
