@@ -1,23 +1,21 @@
 # BUILD: 2026-08-09-01
 import os
-from flask import Flask, render_template_string, request, redirect, url_for, session, flash
+from flask import Flask, render_template_string, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit, join_room
 from werkzeug.security import generate_password_hash, check_password_hash
-import os, datetime, random, base64
+import datetime, random, base64, time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-key-change-this')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True}
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True, 'pool_recycle': 300}
 db = SQLAlchemy(app)
 socketio = SocketIO(app, max_http_buffer_size=10000000)
 
 with app.app_context():
-    db.create_all()  
-
-print("Tables created successfully!")
+    db.create_all()
+    print("✅ Tables created successfully!")
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
