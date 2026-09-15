@@ -1370,45 +1370,39 @@ def vote(poll_id, choice):
 # --- PROFILE PAGE (TikTok-Style, Full-Screen, Crash-Proof) ---
 @app.route('/profile/<username>', methods=['GET', 'POST'])
 def profile(username):
-    # --- 1. SESSION & USER VALIDATION (Crash-Proof) ---
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # Get the logged-in user
     current_user = db.session.get(User, int(session['user_id']))
     if not current_user:
         session.pop('user_id', None)
         return redirect(url_for('login'))
     
-    # Get the profile user being viewed
     user = User.query.filter_by(username=username).first()
     if not user:
         return "User not found!", 404
 
-    # --- 2. HANDLE POST REQUESTS (Follow, Unfollow, Uploads) ---
+    # --- HANDLE POST REQUESTS ---
     if request.method == 'POST':
-        # --- 2a. FOLLOW / UNFOLLOW ---
+        # Follow
         if 'follow' in request.form:
-            # Check if already following
-            existing_follow = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
-            if not existing_follow and current_user.username != user.username:
-                new_follow = Follow(follower=current_user.username, followed=user.username)
-                db.session.add(new_follow)
-                # Update follower count on the profile user
+            existing = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
+            if not existing and current_user.username != user.username:
+                db.session.add(Follow(follower=current_user.username, followed=user.username))
                 user.followers = (user.followers or 0) + 1
                 db.session.commit()
             return redirect(url_for('profile', username=username))
 
+        # Unfollow
         elif 'unfollow' in request.form:
-            follow_to_delete = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
-            if follow_to_delete:
-                db.session.delete(follow_to_delete)
-                # Decrease follower count on the profile user
+            follow = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
+            if follow:
+                db.session.delete(follow)
                 user.followers = max((user.followers or 0) - 1, 0)
                 db.session.commit()
             return redirect(url_for('profile', username=username))
 
-        # --- 2b. UPLOAD PROFILE PICTURE ---
+        # Update Profile Picture
         elif 'profile_pic' in request.files:
             file = request.files['profile_pic']
             if file and file.filename != '':
@@ -1417,10 +1411,10 @@ def profile(username):
                     user.profile_pic = f"data:image/png;base64,{img_data}"
                     db.session.commit()
                 except Exception as e:
-                    print(f"Profile pic upload error: {e}")
+                    print(f"Profile pic error: {e}")
             return redirect(url_for('profile', username=username))
 
-        # --- 2c. CREATE A POST ---
+        # Create Post
         elif 'post_image' in request.files or 'post_caption' in request.form:
             caption = request.form.get('post_caption', '')
             file = request.files.get('post_image')
@@ -1430,353 +1424,310 @@ def profile(username):
                     img_data = base64.b64encode(file.read()).decode('utf-8')
                     image_data = f"data:image/png;base64,{img_data}"
                 except Exception as e:
-                    print(f"Post image upload error: {e}")
-            
-            new_post = Post(username=user.username, content=caption, image=image_data)
-            db.session.add(new_post)
+                    print(f"Post image error: {e}")
+            db.session.add(Post(username=user.username, content=caption, image=image_data))
             db.session.commit()
             return redirect(url_for('profile', username=username))
 
-    # --- 3. GATHER DATA FOR DISPLAY ---
+    # --- GATHER DISPLAY DATA ---
     flag = get_flag(user.country)
-    
-    # Get follower/following counts
     followers_count = Follow.query.filter_by(followed=user.username).count()
     following_count = Follow.query.filter_by(follower=user.username).count()
-    
-    # Check if the current user is following this profile
     is_following = Follow.query.filter_by(follower=current_user.username, followed=user.username).first() is not None
+    is_owner = (current_user.username == user.username)
 
-    # Get user's posts
     user_posts = Post.query.filter_by(username=user.username).order_by(Post.timestamp.desc()).all()
     post_html = ""
     if user_posts:
         for p in user_posts:
+            edit_delete = ""
+            if is_owner:
+                edit_delete = f'''
+                <div class="post-actions">
+                    <button class="post-action-btn edit-btn" onclick="editPost({p.id})">✏️ Edit</button>
+                    <button class="post-action-btn delete-btn" onclick="deletePost({p.id})">🗑️ Delete</button>
+                </div>
+                '''
             post_html += f'''
-            <div class="post-card">
+            <div class="post-card" id="post-{p.id}">
                 <div class="post-header">
                     <span class="post-user">@{p.username}</span>
                     <span class="post-time">{p.timestamp.strftime('%b %d, %I:%M %p')}</span>
                 </div>
-                <div class="post-content">{p.content}</div>
+                <div class="post-content" id="post-content-{p.id}">{p.content}</div>
                 {f'<img src="{p.image}" class="post-image">' if p.image else ''}
-                <div class="post-actions">
-                    <span>❤️ {p.likes}</span>
-                    <span>💬 Comment</span>
-                </div>
+                {edit_delete}
             </div>
             '''
     else:
         post_html = '<p style="color:#666;text-align:center;padding:20px;">No posts yet.</p>'
 
-    # --- 4. RENDER THE HTML ---
     return f'''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>{user.username}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <style>
-            * {{ box-sizing: border-box; }}
-            body {{
-                font-family: Arial, sans-serif;
-                background: #0b1a2e;
-                color: white;
-                margin: 0;
-                padding: 0 0 90px 0;
-                min-height: 100vh;
-            }}
-            .container {{
-                width: 100%;
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 12px;
-                box-sizing: border-box;
-            }}
-            .profile-card {{
-                background: #1a2a3e;
-                padding: 20px;
-                border-radius: 15px;
-                width: 100%;
-                box-sizing: border-box;
-                position: relative;
-            }}
-            .settings-gear {{
-                position: absolute;
-                top: 15px;
-                right: 15px;
-                color: #888;
-                font-size: 24px;
-                text-decoration: none;
-            }}
-            .settings-gear:hover {{
-                color: #00bfff;
-            }}
-            .profile-header {{
-                display: flex;
-                align-items: center;
-                gap: 20px;
-                margin-bottom: 20px;
-            }}
-            .profile-img {{
-                width: 80px;
-                height: 80px;
-                border-radius: 50%;
-                border: 3px solid #00bfff;
-                object-fit: cover;
-                flex-shrink: 0;
-            }}
-            .profile-info {{
-                flex: 1;
-            }}
-            .profile-info h1 {{
-                font-size: 22px;
-                margin: 0 0 5px 0;
-                color: #00bfff;
-            }}
-            .flag {{
-                font-size: 22px;
-                margin-left: 8px;
-            }}
-            .stats {{
-                display: flex;
-                gap: 15px;
-                font-size: 14px;
-                color: #888;
-                margin-bottom: 15px;
-            }}
-            .stats span {{
-                font-weight: bold;
-                color: white;
-            }}
-            .mood-section {{
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin: 15px 0;
-                padding: 10px;
-                background: #0b1a2e;
-                border-radius: 10px;
-            }}
-            .mood-section form {{
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex: 1;
-            }}
-            .mood-section select {{
-                padding: 8px 12px;
-                border-radius: 8px;
-                border: none;
-                background: #1a2a3e;
-                color: white;
-                font-size: 14px;
-            }}
-            .btn {{
-                display: inline-block;
-                padding: 8px 16px;
-                border: none;
-                border-radius: 8px;
-                font-weight: bold;
-                cursor: pointer;
-                text-decoration: none;
-                font-size: 14px;
-            }}
-            .btn-follow {{
-                background: #28a745;
-                color: white;
-            }}
-            .btn-unfollow {{
-                background: #ff5555;
-                color: white;
-            }}
-            .btn-dm {{
-                background: #6f42c1;
-                color: white;
-            }}
-            .btn-mood {{
-                background: #ffc107;
-                color: #111;
-            }}
-            .btn-upload {{
-                background: #28a745;
-                color: white;
-                width: 100%;
-                padding: 12px;
-                margin-top: 8px;
-            }}
-            .btn-primary {{
-                background: #00bfff;
-                color: white;
-                padding: 12px 20px;
-                width: 100%;
-                border: none;
-                border-radius: 10px;
-                font-weight: bold;
-                cursor: pointer;
-            }}
-            .post-input {{
-                width: 100%;
-                padding: 12px;
-                border-radius: 12px;
-                border: none;
-                background: #0b1a2e;
-                color: white;
-                font-size: 14px;
-                margin: 10px 0;
-                resize: none;
-                box-sizing: border-box;
-            }}
-            .post-card {{
-                background: #1a2a3e;
-                padding: 15px;
-                border-radius: 15px;
-                margin-bottom: 15px;
-                width: 100%;
-                box-sizing: border-box;
-            }}
-            .post-header {{
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 5px;
-            }}
-            .post-user {{
-                font-weight: bold;
-                color: #00bfff;
-            }}
-            .post-time {{
-                font-size: 11px;
-                color: #666;
-            }}
-            .post-content {{
-                font-size: 14px;
-                color: #ddd;
-                margin: 5px 0;
-            }}
-            .post-image {{
-                width: 100%;
-                border-radius: 10px;
-                margin-top: 10px;
-            }}
-            .post-actions {{
-                display: flex;
-                gap: 20px;
-                font-size: 13px;
-                color: #888;
-                margin-top: 10px;
-            }}
-            .bottom-nav {{
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                background: #0f1a2b;
-                display: flex;
-                justify-content: space-around;
-                padding: 12px 0 20px 0;
-                border-top: 1px solid #1a2a3e;
-                z-index: 999;
-            }}
-            .nav-item {{
-                color: #777;
-                text-decoration: none;
-                font-size: 11px;
-                text-align: center;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                flex: 1;
-            }}
-            .nav-item:hover, .nav-item.active {{
-                color: #00bfff;
-            }}
-            .nav-icon {{
-                font-size: 24px;
-                margin-bottom: 4px;
-            }}
-        </style>
-    </head>
-    <body>
-    <div class="container">
-        <div class="profile-card">
-            <!-- Settings Gear -->
-            <a href="/settings" class="settings-gear">⚙️</a>
+<!DOCTYPE html>
+<html>
+<head>
+<title>{user.username} | IceConnect</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+    * {{ margin:0; padding:0; box-sizing:border-box; }}
+    html, body {{
+        width:100%; min-height:100%;
+        background:#0b1a2e; color:#fff;
+        font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        overflow-x:hidden;
+    }}
+    .container {{
+        width:100%; max-width:640px;
+        margin:0 auto; padding:12px 16px 100px 16px;
+        display:flex; flex-direction:column;
+    }}
+    .profile-card {{
+        background:#1a2a3e; border-radius:18px;
+        padding:20px; position:relative;
+        width:100%;
+    }}
+    .settings-gear {{
+        position:absolute; top:14px; right:16px;
+        color:#888; font-size:22px; text-decoration:none;
+    }}
+    .settings-gear:hover {{ color:#00bfff; }}
 
-            <!-- Profile Header (Avatar, Name, Flag) -->
-            <div class="profile-header">
-                <img src="{user.profile_pic}" class="profile-img">
-                <div class="profile-info">
-                    <h1>{user.username} <span class="flag">{flag}</span></h1>
-                    <div class="stats">
-                        <span>{followers_count}</span> Followers &nbsp;|&nbsp;
-                        <span>{following_count}</span> Following
-                    </div>
+    .profile-header {{
+        display:flex; align-items:center;
+        gap:16px; padding-bottom:16px;
+        border-bottom:1px solid rgba(255,255,255,0.08);
+    }}
+    .profile-img {{
+        width:78px; height:78px; border-radius:50%;
+        border:3px solid #00bfff; object-fit:cover;
+        background:#0b1a2e; flex-shrink:0;
+    }}
+    .profile-stats {{
+        display:flex; gap:22px; flex:1; justify-content:space-around;
+    }}
+    .stat-item {{ text-align:center; }}
+    .stat-number {{ font-size:18px; font-weight:700; display:block; }}
+    .stat-label {{ font-size:11px; color:#888; letter-spacing:0.4px; }}
+
+    .profile-name {{
+        font-size:20px; font-weight:700;
+        display:flex; align-items:center; gap:8px;
+        margin:14px 0 4px 0;
+    }}
+    .flag {{ font-size:20px; }}
+    .profile-bio {{ font-size:13px; color:#aaa; margin-bottom:14px; }}
+
+    .action-buttons {{
+        display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;
+    }}
+    .btn {{
+        flex:1; min-width:80px; padding:10px 14px;
+        border:none; border-radius:10px; font-weight:600;
+        font-size:14px; cursor:pointer; text-decoration:none;
+        display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    }}
+    .btn-follow {{ background:#00bfff; color:#fff; }}
+    .btn-unfollow {{ background:#2a3a5e; color:#fff; }}
+    .btn-dm {{ background:#6f42c1; color:#fff; }}
+    .btn-mood {{ background:rgba(255,255,255,0.08); color:#fff; flex:0.6; }}
+
+    .mood-section {{
+        display:flex; align-items:center; gap:10px;
+        padding:12px 0; font-size:14px;
+        border-top:1px solid rgba(255,255,255,0.06);
+        border-bottom:1px solid rgba(255,255,255,0.06);
+        margin-bottom:16px;
+    }}
+    .mood-section a {{
+        margin-left:auto; color:#00bfff;
+        text-decoration:none; font-size:13px;
+    }}
+
+    .create-post {{
+        background:#0f1e30; border-radius:14px;
+        padding:16px; margin-bottom:16px;
+    }}
+    .create-post h4 {{
+        color:#ccc; font-size:14px; font-weight:600;
+        margin-bottom:10px;
+    }}
+    .create-post textarea {{
+        width:100%; padding:12px; border-radius:10px;
+        border:none; background:#0b1a2e; color:#fff;
+        font-size:14px; resize:none; margin-bottom:10px;
+    }}
+    .create-post input[type=file] {{
+        color:#888; font-size:13px; display:block; margin-bottom:10px;
+    }}
+    .btn-primary {{
+        width:100%; padding:12px; border:none; border-radius:10px;
+        background:#00bfff; color:#fff; font-weight:600;
+        cursor:pointer; font-size:14px;
+    }}
+    .btn-upload {{
+        width:100%; padding:12px; border:none; border-radius:10px;
+        background:#28a745; color:#fff; font-weight:600;
+        cursor:pointer; font-size:14px; margin-top:8px;
+    }}
+
+    .section-title {{
+        font-size:13px; font-weight:600; color:#aaa;
+        letter-spacing:0.6px; margin:14px 0 10px 0;
+    }}
+
+    .post-card {{
+        background:#1a2a3e; border-radius:14px;
+        padding:16px; margin-bottom:14px;
+    }}
+    .post-header {{
+        display:flex; justify-content:space-between;
+        margin-bottom:8px;
+    }}
+    .post-user {{ font-weight:600; color:#00bfff; font-size:14px; }}
+    .post-time {{ font-size:11px; color:#666; }}
+    .post-content {{ font-size:14px; color:#ddd; line-height:1.5; }}
+    .post-image {{ width:100%; border-radius:10px; margin-top:10px; }}
+
+    .post-actions {{
+        display:flex; gap:12px; margin-top:12px;
+        padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);
+    }}
+    .post-action-btn {{
+        background:transparent; border:none; color:#888;
+        cursor:pointer; font-size:13px; padding:4px 10px;
+        border-radius:6px;
+    }}
+    .post-action-btn:hover {{ background:rgba(255,255,255,0.05); }}
+    .edit-btn:hover {{ color:#00bfff; }}
+    .delete-btn:hover {{ color:#ff5555; }}
+
+    .bottom-nav {{
+        position:fixed; bottom:0; left:0;
+        width:100%; background:#0f1a2b;
+        display:flex; justify-content:space-around;
+        padding:10px 0 18px 0;
+        border-top:1px solid rgba(255,255,255,0.06);
+        z-index:999;
+    }}
+    .nav-item {{
+        color:#777; text-decoration:none; font-size:10px;
+        text-align:center; display:flex; flex-direction:column;
+        align-items:center; gap:2px; flex:1;
+    }}
+    .nav-item:hover, .nav-item.active {{ color:#00bfff; }}
+    .nav-icon {{ font-size:22px; }}
+
+    @media (max-width: 480px) {{
+        .container {{ padding:10px 12px 100px 12px; }}
+        .profile-img {{ width:64px; height:64px; }}
+        .stat-number {{ font-size:16px; }}
+        .profile-name {{ font-size:18px; }}
+        .btn {{ font-size:13px; padding:9px 12px; }}
+    }}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="profile-card">
+        <a href="/settings" class="settings-gear">⚙️</a>
+
+        <div class="profile-header">
+            <img src="{user.profile_pic}" class="profile-img">
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-number">{followers_count}</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{following_count}</span>
+                    <span class="stat-label">Following</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{len(user_posts)}</span>
+                    <span class="stat-label">Posts</span>
                 </div>
             </div>
-
-            <!-- Mood Vibe Section -->
-            <div class="mood-section">
-                <span>🎭 Mood:</span>
-                <form method="POST">
-                    <select name="mood_emoji">
-                        <option value="❄️">❄️ Ice Cold</option>
-                        <option value="🔥">🔥 On Fire</option>
-                        <option value="😎">😎 Cool</option>
-                        <option value="🤔">🤔 Thinking</option>
-                        <option value="💪">💪 Hustling</option>
-                        <option value="😴">😴 Tired</option>
-                    </select>
-                    <button type="submit" class="btn btn-mood" name="update_mood">Update</button>
-                </form>
-            </div>
-
-            <!-- Action Buttons (Follow / Unfollow / DM) -->
-            <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-                <form method="POST" style="flex:1;">
-                    {'<button type="submit" class="btn btn-unfollow" name="unfollow" style="width:100%;">Unfollow</button>' if is_following else '<button type="submit" class="btn btn-follow" name="follow" style="width:100%;">Follow</button>'}
-                </form>
-                <a href="/dm/{user.username}" class="btn btn-dm" style="flex:1; text-align:center;">💬 DM</a>
-            </div>
-
-            <hr style="border-color:#334; margin:20px 0;">
-
-            <!-- Create a Post -->
-            <h3 style="color:#ccc;font-size:16px;text-align:left;">📸 Create a Post</h3>
-            <form method="POST" enctype="multipart/form-data">
-                <input type="file" name="post_image" accept="image/*" style="color:#ccc;margin:10px 0;display:block;">
-                <textarea name="post_caption" class="post-input" placeholder="Write a caption..." rows="2"></textarea>
-                <button type="submit" class="btn-primary">Post to Feed</button>
-            </form>
-
-            <hr style="border-color:#334; margin:20px 0;">
-
-            <!-- Update Profile Picture -->
-            <h3 style="color:#ccc;font-size:16px;text-align:left;">🖼️ Update Profile Picture</h3>
-            <form method="POST" enctype="multipart/form-data">
-                <input type="file" name="profile_pic" accept="image/*" style="color:#ccc;margin:10px 0;display:block;">
-                <button type="submit" class="btn-upload">Upload Picture</button>
-            </form>
-
-            <hr style="border-color:#334; margin:20px 0;">
-
-            <!-- Your Posts -->
-            <h3 style="color:#ccc;font-size:16px;text-align:left;">📰 Your Posts</h3>
-            {post_html}
         </div>
-    </div>
 
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
-        <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
-        <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏆</span>Leaderboard</a>
-        <a href="/inbox" class="nav-item"><span class="nav-icon">📨</span>Inbox</a>
-        <a href="/profile/{current_user.username}" class="nav-item active"><span class="nav-icon">👤</span>Profile</a>
+        <div class="profile-name">
+            {user.username} <span class="flag">{flag}</span>
+        </div>
+        <p class="profile-bio">✨ Living the IQAL vibe</p>
+
+        <div class="action-buttons">
+            {'<button class="btn btn-unfollow" onclick="document.getElementById(\'unfollow-form\').submit();">Unfollow</button>' if is_following else '<button class="btn btn-follow" onclick="document.getElementById(\'follow-form\').submit();">Follow</button>'}
+            <a href="/dm/{user.username}" class="btn btn-dm">💬 DM</a>
+            <a href="/mood" class="btn btn-mood">🎭</a>
+        </div>
+
+        <form id="follow-form" method="POST" style="display:none;">
+            <input type="hidden" name="follow" value="1">
+        </form>
+        <form id="unfollow-form" method="POST" style="display:none;">
+            <input type="hidden" name="unfollow" value="1">
+        </form>
+
+        <div class="mood-section">
+            🎭 Mood: <strong>{user.mood_color or '❄️'}</strong>
+            <a href="/mood">Change</a>
+        </div>
+
+        {'<div class="create-post"><h4>Create Post</h4><form method="POST" enctype="multipart/form-data"><input type="file" name="post_image" accept="image/*"><textarea name="post_caption" placeholder="Write a caption..." rows="2"></textarea><button type="submit" class="btn-primary">Post to Feed</button></form></div><div class="create-post"><h4>Update Profile Picture</h4><form method="POST" enctype="multipart/form-data"><input type="file" name="profile_pic" accept="image/*"><button type="submit" class="btn-upload">Upload Picture</button></form></div>' if is_owner else ''}
+
+        <div class="section-title">📰 Posts</div>
+        <div>{post_html}</div>
     </div>
-    </body>
-    </html>
-    '''
+</div>
+
+<div class="bottom-nav">
+    <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
+    <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
+    <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏆</span>Leaderboard</a>
+    <a href="/inbox" class="nav-item"><span class="nav-icon">📨</span>Inbox</a>
+    <a href="/profile/{current_user.username}" class="nav-item active"><span class="nav-icon">👤</span>Profile</a>
+</div>
+
+<script>
+function deletePost(postId) {{
+    if (confirm('Delete this post?')) {{
+        fetch(`/delete_post/${{postId}}`, {{ method: 'POST' }})
+        .then(res => res.json())
+        .then(data => {{
+            if (data.success) {{
+                document.getElementById(`post-${{postId}}`).remove();
+            }} else {{
+                alert('Error: ' + (data.error || 'Could not delete post.'));
+            }}
+        }})
+        .catch(() => alert('Network error.'));
+    }}
+}}
+
+function editPost(postId) {{
+    const el = document.getElementById(`post-content-${{postId}}`);
+    const current = el.innerText;
+    const updated = prompt('Edit your post:', current);
+    if (updated !== null && updated.trim() !== '') {{
+        fetch(`/edit_post/${{postId}}`, {{
+            method: 'POST',
+            headers: {{ 'Content-Type': 'application/json' }},
+            body: JSON.stringify({{ content: updated }})
+        }})
+        .then(res => res.json())
+        .then(data => {{
+            if (data.success) {{
+                el.innerText = updated;
+            }} else {{
+                alert('Error: ' + (data.error || 'Could not edit post.'));
+            }}
+        }})
+        .catch(() => alert('Network error.'));
+    }}
+}}
+</script>
+</body>
+</html>
+'''
  
 # --- SOCKET EVENTS ---
 @socketio.on('join_room')
@@ -2447,6 +2398,52 @@ def feedback():
         f.write(feedback_msg + '\n')
     
     return "Feedback saved"
+
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+def delete_post(post_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    user = db.session.get(User, int(session['user_id']))
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    post = Post.query.get(post_id)
+    if not post:
+        return jsonify({'success': False, 'error': 'Post not found'}), 404
+    
+    if post.username != user.username:
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@app.route('/edit_post/<int:post_id>', methods=['POST'])
+def edit_post(post_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    user = db.session.get(User, int(session['user_id']))
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    post = Post.query.get(post_id)
+    if not post:
+        return jsonify({'success': False, 'error': 'Post not found'}), 404
+    
+    if post.username != user.username:
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    data = request.get_json()
+    new_content = data.get('content')
+    if not new_content:
+        return jsonify({'success': False, 'error': 'No content provided'}), 400
+    
+    post.content = new_content
+    db.session.commit()
+    return jsonify({'success': True})
 
 # --- PRIVACY & SECURITY SETTINGS ---
 @app.route('/privacy')
