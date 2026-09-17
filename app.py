@@ -46,6 +46,13 @@ class Follow(db.Model):
     follower = db.Column(db.String(50), nullable=False)
     followed = db.Column(db.String(50), nullable=False)
 
+class Block(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    blocker_id = db.Column(db.Integer, nullable=False)
+    blocked_id = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now)
+    __table_args__ = (db.UniqueConstraint('blocker_id', 'blocked_id', name='unique_block'),)
+
 class DailyXP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False)
