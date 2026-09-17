@@ -1437,13 +1437,13 @@ def profile(username):
         # Follow
         if 'follow' in request.form:
     if is_blocked(current_user.id, user.id):
-        return redirect(url_for('profile', username=username)) 
-            existing = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
-            if not existing and current_user.username != user.username:
-                db.session.add(Follow(follower=current_user.username, followed=user.username))
-                user.followers = (user.followers or 0) + 1
-                db.session.commit()
-            return redirect(url_for('profile', username=username))
+        return redirect(url_for('profile', username=username))
+    existing = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
+    if not existing and current_user.username != user.username:
+        db.session.add(Follow(follower=current_user.username, followed=user.username))
+        user.followers = (user.followers or 0) + 1
+        db.session.commit()
+    return redirect(url_for('profile', username=username))
 
         # Unfollow
         elif 'unfollow' in request.form:
