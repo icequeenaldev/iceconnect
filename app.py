@@ -160,6 +160,15 @@ def add_xp(username, amount):
         user.level = get_level(user.xp)
         db.session.commit()
 
+def is_blocked(user_a_id, user_b_id):
+    """Check if there is a block between two users (in either direction)."""
+    if not user_a_id or not user_b_id:
+        return False
+    return Block.query.filter(
+        ((Block.blocker_id == user_a_id) & (Block.blocked_id == user_b_id)) |
+        ((Block.blocker_id == user_b_id) & (Block.blocked_id == user_a_id))
+    ).first() is not None
+
 # --- HOME PAGE (Dashboard with Rooms & Features) ---
 HOME_HTML = '''
 <!DOCTYPE html>
