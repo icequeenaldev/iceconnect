@@ -769,12 +769,13 @@ def chatrooms():
     </body>
     </html>
     '''
-# --- CHAT ROOM (ULTIMATE CRASH-PROOF EDITION) ---
+
+# --- CHAT ROOM (ULTIMATE CRASH-PROOF EDITION WITH BLOCK) ---
 @app.route('/chat/<room_name>')
 def chat_room(room_name):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    user = db.session.get(User, session.get('user_id'))
+    user = db.session.get(User, int(session.get('user_id')))
     if room_name == 'youth' and user.age > 25:
         return "<h1>⛔ Access Denied</h1><p>Youth Hub is strictly for ages 16-25.</p>"
     if room_name == 'premier' and user.age < 26:
@@ -812,12 +813,13 @@ def chat_room(room_name):
         a{{color:#00bfff;text-decoration:none;display:block;padding:10px 0;text-align:center;}}
         .user-click{{color:#00bfff;font-weight:bold;cursor:pointer;}}
         .user-click:hover{{text-decoration:underline;}}
-        .msg-menu{{position:absolute;bottom:50px;right:10px;background:#1a2a3e;border-radius:10px;padding:5px;display:none;flex-direction:column;box-shadow:0 4px 15px rgba(0,0,0,0.5);z-index:100;min-width:100px;}}
+        .msg-menu{{position:absolute;bottom:50px;right:10px;background:#1a2a3e;border-radius:10px;padding:5px;display:none;flex-direction:column;box-shadow:0 4px 15px rgba(0,0,0,0.5);z-index:100;min-width:140px;}}
         .msg-menu button{{background:none;border:none;color:white;padding:10px 15px;text-align:left;font-size:14px;cursor:pointer;border-radius:5px;width:100%;}}
         .msg-menu button:hover{{background:#2a3a5e;}}
         .msg-menu .delete-btn{{color:#ff5555;}}
         .msg-menu .report-btn{{color:#ff5555;}}
         .msg-menu .edit-btn{{color:#00bfff;}}
+        .msg-menu .block-btn{{color:#ff5555;}}
         .reactions{{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}}
         .reaction-btn{{background:#2a3a5e;border:none;border-radius:15px;padding:4px 10px;color:white;cursor:pointer;font-size:14px;}}
         .reaction-btn:hover{{background:#00bfff;}}
@@ -939,7 +941,6 @@ def chat_room(room_name):
             var replyText = replyTo ? '<small style="color:gray;">Replying to ' + replyTo + '</small><br>' : '';
             newMsg.innerHTML = replyText + '<span class="user-click" onclick="openProfile(\\'' + user + '\\')" style="color:#00bfff;font-weight:bold;cursor:pointer;">' + user + '</span>: ' + content;
             
-            // HOLD TO SHOW MENU (Delete, Edit, Report)
             var holdTimer;
             newMsg.addEventListener('touchstart', function(e) {{
                 holdTimer = setTimeout(() => {{
@@ -956,7 +957,6 @@ def chat_room(room_name):
                 clearTimeout(holdTimer);
             }});
 
-            // DOUBLE TAP TO HIGHLIGHT / REPLY
             newMsg.addEventListener('click', function(e) {{
                 if(e.target.tagName.toLowerCase() === 'button') return;
                 var now = new Date().getTime();
@@ -975,32 +975,38 @@ def chat_room(room_name):
                 lastTap = now;
             }});
 
-            // MENU DROPDOWN (Built with JavaScript, NOT Python)
             var menuDiv = document.createElement('div');
             menuDiv.className = 'msg-menu';
             menuDiv.id = 'menu-' + msgId;
             
-            var deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerText = '🗑️ Delete';
-            deleteBtn.onclick = function() {{ deleteMessage(msgId); }};
-            
-            var editBtn = document.createElement('button');
-            editBtn.className = 'edit-btn';
-            editBtn.innerText = '✏️ Edit';
-            editBtn.onclick = function() {{ editMessage(msgId); }};
+            if (user === username) {{
+                var deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerText = '🗑️ Delete';
+                deleteBtn.onclick = function() {{ deleteMessage(msgId); }};
+                menuDiv.appendChild(deleteBtn);
+                
+                var editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.innerText = '✏️ Edit';
+                editBtn.onclick = function() {{ editMessage(msgId); }};
+                menuDiv.appendChild(editBtn);
+            }}
             
             var reportBtn = document.createElement('button');
             reportBtn.className = 'report-btn';
             reportBtn.innerText = '🚩 Report';
             reportBtn.onclick = function() {{ reportMessage(user); }};
-            
-            menuDiv.appendChild(deleteBtn);
-            menuDiv.appendChild(editBtn);
             menuDiv.appendChild(reportBtn);
+
+            var blockBtn = document.createElement('button');
+            blockBtn.className = 'block-btn';
+            blockBtn.innerText = '🚫 Block User';
+            blockBtn.onclick = function() {{ blockUser(user); }};
+            menuDiv.appendChild(blockBtn);
+            
             newMsg.appendChild(menuDiv);
 
-            // REACTION EMOJIS (Built with JavaScript, NOT Python)
             var reactionRow = document.createElement('div');
             reactionRow.className = 'reactions';
             
@@ -1039,6 +1045,28 @@ def chat_room(room_name):
             alert('Report sent to IceQueenAL for user: ' + user);
         }}
 
+        function blockUser(targetUsername) {{
+            if (!confirm('Block ' + targetUsername + '? They will not be able to DM you, follow you, or interact with you anymore.')) return;
+            fetch('/get_user_id/' + encodeURIComponent(targetUsername))
+                .then(r => r.json())
+                .then(data => {{
+                    if (!data.success) {{
+                        alert('Could not find user.');
+                        return;
+                    }}
+                    return fetch('/block_user/' + data.user_id, {{ method: 'POST' }});
+                }})
+                .then(r => r ? r.json() : null)
+                .then(data => {{
+                    if (data && data.success) {{
+                        alert(targetUsername + ' has been blocked.');
+                    }} else if (data) {{
+                        alert('Error: ' + (data.error || 'Could not block.'));
+                    }}
+                }})
+                .catch(() => alert('Network error.'));
+        }}
+
         function sendReaction(msgId, emoji) {{
             socket.emit('send_reaction', {{msg_id: msgId, reaction: emoji, room: room}});
         }}
@@ -1047,7 +1075,7 @@ def chat_room(room_name):
             var msg = document.getElementById('msg').value;
             if(msg.trim() !== '') {{
                 socket.emit('send_message', {{msg: msg, room: room, username: username, reply_id: replyToId}});
-                addMessage(username, msg);   
+                addMessage(username, msg, Date.now(), replyToId);   
                 document.getElementById('msg').value = '';
                 document.getElementById('reply-box').style.display = 'none';
                 replyToId = null;
@@ -1061,7 +1089,7 @@ def chat_room(room_name):
     </script>
     </body>
     </html>
-    """ 
+    """
         
 
 # --- LOGIN PAGE (Full Screen, Centered, Beautiful) ---
