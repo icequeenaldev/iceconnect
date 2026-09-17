@@ -1435,7 +1435,7 @@ def profile(username):
     # --- HANDLE POST REQUESTS ---
     if request.method == 'POST':
         # Follow
-        if 'follow' in request.form:
+if 'follow' in request.form:
     if is_blocked(current_user.id, user.id):
         return redirect(url_for('profile', username=username))
     existing = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
@@ -1444,7 +1444,6 @@ def profile(username):
         user.followers = (user.followers or 0) + 1
         db.session.commit()
     return redirect(url_for('profile', username=username))
-
         # Unfollow
         elif 'unfollow' in request.form:
             follow = Follow.query.filter_by(follower=current_user.username, followed=user.username).first()
