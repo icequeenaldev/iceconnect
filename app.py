@@ -2282,10 +2282,10 @@ def settings():
             <span class="settings-text">Privacy & Security</span>
             <span class="settings-arrow">›</span>
         </a>
-        <a href="/blocked" class="settings-item">
-            <span class="settings-icon">🚫</span>
-            <span class="settings-text">Blocked Users</span>
-            <span class="settings-arrow">›</span>
+        <a href="/blocked_users" class="settings-item">
+    <span class="settings-icon">🚫</span>
+    <span class="settings-text">Blocked Users</span>
+    <span class="settings-arrow">›</span>
         </a>
         
         <div class="section-title">About & Support</div>
