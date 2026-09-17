@@ -1298,16 +1298,22 @@ def handle_join_dm(data):
 def handle_dm_message(data):
     room = data['room']
     sender = data['sender']
-    receiver = data['receiver']
     msg = data['msg']
     
-    # Send live message to both users
-    emit('dm_message', [sender, msg], room=room)
+    # Extract receiver from room name (format: "userA_userB" sorted alphabetically)
+    parts = room.split('_')
+    if len(parts) != 2:
+        return  # Invalid room name
+    receiver = parts[0] if parts[1] == sender else parts[1]
     
-    # Save to database for profile inbox
-    new_msg = Message(room=room, username=sender, country="", content=msg)
-    db.session.add(new_msg)
-    db.session.commit()
+    # Check if there is a block between the two users
+    sender_user = User.query.filter_by(username=sender).first()
+    receiver_user = User.query.filter_by(username=receiver).first()
+    if sender_user and receiver_user and is_blocked(sender_user.id, receiver_user.id):
+        return  # Silently drop the message
+    
+    # Send the message normally
+    emit('dm_message', [sender, msg], room=room)
 
 @socketio.on('dm_typing')
 def handle_dm_typing(data):
@@ -2672,57 +2678,6 @@ def blocked_users():
     </html>
     ''', blocked_list=blocked_list)
 
-@app.route('/blocked')
-def blocked():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    try:
-        user = db.session.get(User, int(session['user_id']))
-        if not user:
-            session.pop('user_id', None)
-            return redirect(url_for('login'))
-    except Exception:
-        session.pop('user_id', None)
-        return redirect(url_for('login'))
-    
-    return render_template_string('''
-    <!DOCTYPE html>
-    <html>
-    <head><title>Blocked Users</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-        * { box-sizing: border-box; }
-        body{font-family:Arial;background:#0b1a2e;color:white;margin:0;padding:0 0 90px 0;}
-        .container{width:100%;max-width:600px;margin:auto;padding:12px;box-sizing:border-box;}
-        .card{background:#1a2a3e;padding:20px;border-radius:15px;margin-bottom:15px;}
-        h1{color:#00bfff;}
-        .blocked-user{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #334;}
-        .blocked-user:last-child{border-bottom:none;}
-        .unblock-btn{background:#ff5555;color:white;border:none;padding:5px 15px;border-radius:5px;cursor:pointer;}
-        .bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:#0f1a2b;display:flex;justify-content:space-around;padding:12px 0 20px 0;border-top:1px solid #1a2a3e;z-index:999;}
-        .nav-item{color:#777;text-decoration:none;font-size:11px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;}
-        .nav-item:hover,.nav-item.active{color:#00bfff;}
-        .nav-icon{font-size:24px;margin-bottom:4px;}
-    </style>
-    </head>
-    <body>
-    <div class="container">
-        <div class="card">
-            <h1>🚫 Blocked Users</h1>
-            <p style="color:#888;text-align:center;padding:20px;">You haven't blocked any users yet.</p>
-        </div>
-        <a href="/settings" style="color:#00bfff;text-decoration:none;display:block;text-align:center;margin-top:10px;">⬅ Back to Settings</a>
-    </div>
-    <div class="bottom-nav">
-        <a href="/" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
-        <a href="/chatrooms" class="nav-item"><span class="nav-icon">💬</span>Chatrooms</a>
-        <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏆</span>Leaderboard</a>
-        <a href="/inbox" class="nav-item"><span class="nav-icon">📨</span>Inbox</a>
-        <a href="/profile/''' + user.username + '''" class="nav-item"><span class="nav-icon">👤</span>Profile</a>
-    </div>
-    </body>
-    </html>
-    ''')
  
 # --- DELETE ROOM ---
 @app.route('/delete_room/<room_name>')
