@@ -2529,6 +2529,149 @@ def privacy():
     </html>
     ''')
 
+# --- BLOCK USER ---
+@app.route('/block_user/<int:user_id>', methods=['POST'])
+def block_user(user_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+
+    current_user = db.session.get(User, int(session['user_id']))
+    if not current_user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+
+    target_user = db.session.get(User, user_id)
+    if not target_user:
+        return jsonify({'success': False, 'error': 'Target user not found'}), 404
+
+    if current_user.id == target_user.id:
+        return jsonify({'success': False, 'error': 'You cannot block yourself'}), 400
+
+    existing = Block.query.filter_by(blocker_id=current_user.id, blocked_id=target_user.id).first()
+    if existing:
+        return jsonify({'success': True, 'message': 'User already blocked'})
+
+    new_block = Block(blocker_id=current_user.id, blocked_id=target_user.id)
+    db.session.add(new_block)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': f'{target_user.username} has been blocked.'})
+
+# --- UNBLOCK USER ---
+@app.route('/unblock_user/<int:user_id>', methods=['POST'])
+def unblock_user(user_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+
+    current_user = db.session.get(User, int(session['user_id']))
+    if not current_user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+
+    target_user = db.session.get(User, user_id)
+    if not target_user:
+        return jsonify({'success': False, 'error': 'Target user not found'}), 404
+
+    block = Block.query.filter_by(blocker_id=current_user.id, blocked_id=target_user.id).first()
+    if block:
+        db.session.delete(block)
+        db.session.commit()
+
+    return jsonify({'success': True, 'message': f'{target_user.username} has been unblocked.'})
+
+# --- GET USER ID BY USERNAME (Helper for Chatroom Block) ---
+@app.route('/get_user_id/<username>')
+def get_user_id(username):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    return jsonify({'success': True, 'user_id': user.id})
+
+# --- BLOCKED USERS LIST (Settings Page) ---
+@app.route('/blocked_users')
+def blocked_users():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    current_user = db.session.get(User, int(session['user_id']))
+    if not current_user:
+        session.pop('user_id', None)
+        return redirect(url_for('login'))
+
+    blocks = Block.query.filter_by(blocker_id=current_user.id).all()
+    blocked_list = []
+    for b in blocks:
+        blocked_user = db.session.get(User, b.blocked_id)
+        if blocked_user:
+            blocked_list.append({
+                'id': blocked_user.id,
+                'username': blocked_user.username,
+                'date': b.created_at.strftime('%b %d, %Y')
+            })
+
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Blocked Users</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <style>
+            * { box-sizing: border-box; }
+            body { font-family: Arial; background: #0b1a2e; color: white; margin: 0; padding: 0 0 90px 0; min-height: 100vh; }
+            .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+            h1 { color: #00bfff; font-size: 22px; margin: 10px 0 20px 0; }
+            .blocked-card { background: #1a2a3e; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+            .blocked-name { font-weight: bold; color: white; font-size: 16px; }
+            .blocked-date { font-size: 12px; color: #888; margin-top: 4px; }
+            .unblock-btn { background: #ff5555; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
+            .unblock-btn:hover { background: #cc4444; }
+            .empty { text-align: center; padding: 40px; color: #666; }
+            a.back { color: #00bfff; text-decoration: none; display: block; text-align: center; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+    <div class="container">
+        <h1>🚫 Blocked Users</h1>
+        <div id="blocked-list">
+            {% if blocked_list %}
+                {% for b in blocked_list %}
+                <div class="blocked-card" id="blocked-{{ b.id }}">
+                    <div>
+                        <div class="blocked-name">{{ b.username }}</div>
+                        <div class="blocked-date">Blocked on {{ b.date }}</div>
+                    </div>
+                    <button class="unblock-btn" onclick="unblockUser({{ b.id }})">Unblock</button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty">You haven't blocked anyone.</div>
+            {% endif %}
+        </div>
+        <a href="/settings" class="back">⬅ Back to Settings</a>
+    </div>
+    <script>
+    function unblockUser(userId) {
+        if (!confirm('Unblock this user? They will be able to interact with you again.')) return;
+        fetch('/unblock_user/' + userId, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    var el = document.getElementById('blocked-' + userId);
+                    if (el) el.remove();
+                    if (document.querySelectorAll('.blocked-card').length === 0) {
+                        document.getElementById('blocked-list').innerHTML = '<div class="empty">You have not blocked anyone.</div>';
+                    }
+                } else {
+                    alert('Error: ' + (data.error || 'Could not unblock.'));
+                }
+            })
+            .catch(() => alert('Network error.'));
+    }
+    </script>
+    </body>
+    </html>
+    ''', blocked_list=blocked_list)
+
 @app.route('/blocked')
 def blocked():
     if 'user_id' not in session:
